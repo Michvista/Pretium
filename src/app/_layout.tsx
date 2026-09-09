@@ -1,18 +1,28 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { initOneSignal } from '@/services/onesignal';
+import { initRevenueCat } from '@/services/revenuecat';
 
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    initRevenueCat();
+    initOneSignal();
+  }, []);
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="results" options={{ title: 'Prices' }} />
+        <Stack.Screen name="product" options={{ title: 'Details' }} />
+        <Stack.Screen name="paywall" options={{ title: 'Go Premium', presentation: 'modal' }} />
+      </Stack>
+      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }

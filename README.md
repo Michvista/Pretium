@@ -57,6 +57,86 @@ Pretium extracts the exact product details using AI, then searches across retail
 
 ---
 
+## Tools & Services (Full Stack)
+
+Everything Pretium touches, grouped by layer. Handy reference for the whole team.
+
+### Mobile app
+| Tool | What it's used for | Status |
+|---|---|---|
+| React Native 0.86 + Expo SDK 57 | Cross-platform app (Android-first) | ✅ installed |
+| Expo Router (file-based, React Navigation) | All navigation: Home → Results → Product → Paywall | ✅ installed |
+| TypeScript | Types for Product / PriceResult / Watchlist / etc. (`src/types`) | ✅ installed |
+| Zustand | Global state (`src/store/useAppStore.ts`): premium flag, daily search limit, recent searches | ✅ installed |
+| @shopify/flash-list | High-performance result list on ResultsScreen | ✅ installed |
+| expo-image-picker | Camera + gallery capture for product screenshots | ✅ installed |
+| expo-crypto | MD5 hashing for query/product cache keys | ✅ installed |
+| expo-web-browser | Open Buy-Now links | ✅ installed |
+
+### AI / extraction
+| Tool | What it's used for | Key / account |
+|---|---|---|
+| Gemini Vision (`gemini-1.5-flash`) | Identify a product from an image → structured Product JSON | `EXPO_PUBLIC_GEMINI_API_KEY` (aistudio.google.com) |
+| Open Graph parser (in-app) | Extract product info from pasted retail links (og:title / og:image / og:price) | none needed |
+
+### Price data
+| Tool | What it's used for | Key / account |
+|---|---|---|
+| SerpApi — Google Shopping engine | Fetch live prices across retailers, incl. shipping | `EXPO_PUBLIC_SERPAPI_KEY` (serpapi.com) |
+| ScrapeGraphAI (fallback, stubbed) | Scrape retailer pages when SerpApi returns nothing | `EXPO_PUBLIC_SCRAPEGRAPH_API_KEY` (not set yet) |
+| Mark's product matching model (Phase 6) | Filter results to the same product (confidence ≥ 0.7), match badge | pending Mark's code |
+| Mark's price trend scoring (Phase 6) | rising / falling / stable + "good time to buy" score | pending Mark's code |
+
+### Backend / database
+| Tool | What it's used for | Key / account |
+|---|---|---|
+| Supabase (Postgres) | `price_cache` (1h TTL), `price_history`, `watchlist` tables | `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` (supabase.com) |
+| Schema | `supabase/schema.sql` — run once in the Supabase SQL editor | — |
+
+### Monetization
+| Tool | What it's used for | Key / account |
+|---|---|---|
+| RevenueCat SDK (v10) | Subscriptions, `premium` entitlement, paywall, restore | `EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID` (app.revenuecat.com) |
+| RevenueCat REST API v2 | Server-side verification script (`scripts/revenuecat-setup.mjs`) | `REVENUECAT_SECRET_API_KEY` (v2 secret, needs "Project Configuration" permission) |
+
+### Push notifications
+| Tool | What it's used for | Key / account |
+|---|---|---|
+| OneSignal (`react-native-onesignal` 5.2.14 + `onesignal-expo-plugin` 2.7.1) | Push + in-app messages; App ID + NSE via Expo plugin | `EXPO_PUBLIC_ONESIGNAL_APP_ID` / `extra.oneSignalAppId` (app.json) |
+
+### Quality / dev workflow
+| Tool | What it's used for |
+|---|---|
+| Jest + jest-expo | Unit tests for services + store (`npm test`) |
+| TypeScript (`tsc --noEmit`) | Type checking |
+| Expo Go | Quick phone preview of JS-level features |
+| EAS Build | Production builds (needed for RevenueCat + OneSignal native modules) |
+| ESLint (`expo lint`) | Linting |
+
+### Environment variables (.env, gitignored)
+```
+EXPO_PUBLIC_GEMINI_API_KEY=
+EXPO_PUBLIC_SERPAPI_KEY=
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=
+EXPO_PUBLIC_ONESIGNAL_APP_ID=
+ONESIGNAL_APP_ID=
+REVENUECAT_API_KEY_ANDROID=
+```
+
+> ⚠️ **Native-only modules:** RevenueCat and OneSignal native SDKs do **not** run in Expo Go — they need a development build (`eas build` / `expo run:*`). Everything else works in Expo Go.
+
+---
+
+## Team Notes
+
+**From Mark (Sep 9):** "I briefly checked it, I'll go through it proper when I get home in the evening."
+
+→ Once Mark's gone through the code, we drop in his matching + trend scoring under Phase 6 (`matchConfidence` on `PriceResult`, `ProductTrend` type, PriceTrendCard on ProductDetailScreen). The stubs are ready.
+
+---
+
 ## Project Structure
 
 ```
