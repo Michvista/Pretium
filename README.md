@@ -129,14 +129,6 @@ REVENUECAT_API_KEY_ANDROID=
 
 ---
 
-## Team Notes
-
-**From Mark (Sep 9):** "I briefly checked it, I'll go through it proper when I get home in the evening."
-
-→ Once Mark's gone through the code, we drop in his matching + trend scoring under Phase 6 (`matchConfidence` on `PriceResult`, `ProductTrend` type, PriceTrendCard on ProductDetailScreen). The stubs are ready.
-
----
-
 ## Project Structure
 
 ```

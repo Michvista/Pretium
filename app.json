@@ -18,7 +18,10 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -53,7 +56,29 @@
       "reactCompiler": true
     },
     "extra": {
-      "oneSignalAppId": "578229d0-cb74-4877-b17e-7de5db57b71d"
-    }
+      "oneSignalAppId": "578229d0-cb74-4877-b17e-7de5db57b71d",
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.michvista.pretium.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.michvista.pretium.onesignal"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "40b62376-75fe-4d65-9c3f-5ef6f4bd7c68"
+      },
+      "router": {}
+    },
+    "owner": "michelle29"
   }
 }
