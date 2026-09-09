@@ -41,3 +41,13 @@ example
 # generated native folders
 /ios
 /android
+
+# agent / meta files (not for public repo)
+AGENTS.md
+CLAUDE.md
+TASKS.md
+.agents
+.claude
+skills-lock.json
+.env
+.env.demo
