@@ -1,56 +1,137 @@
-# Welcome to your Expo app 👋
+# Pretium
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Find the true price of anything, anywhere.**
 
-## Get started
+Pretium is a cross-platform mobile app (Android-first) that helps users instantly find the best price for any product online. Search by text, paste a link, or screenshot a product — Pretium uses AI to identify the item and returns ranked results from multiple retailers worldwide, including shipping costs, sorted by total price.
 
-1. Install dependencies
+Built for the RevenueCat Shipaton 2026.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## What It Does
 
-   ```bash
-   npx expo start
-   ```
+Most price comparison tools require you to already know what site to search. Pretium removes that friction entirely.
 
-In the output, you'll find options to open the app in a
+You give it a product in any format:
+- Type a product name ("Nike Air Force 1 white size 10")
+- Paste a product link from any retailer
+- Screenshot a product from an ad, a website, or even in a store
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Pretium extracts the exact product details using AI, then searches across retailers to find the cheapest total cost including shipping. The matching engine ensures you're comparing the same item — not similar or knockoff variants.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## Core Features
 
-When you're ready, run:
+### Free Tier
+- Text search for any product
+- Screenshot/image upload with AI-powered product extraction (Gemini Vision)
+- Link paste — extracts product info from any retail URL via Open Graph tags
+- Price comparison results ranked by total cost (price + shipping)
+- Product matching accuracy — same item, not just similar ones
+- Store name, seller info, and direct buy link
+- 5 searches per day
 
-```bash
-npm run reset-project
+### Premium (via RevenueCat)
+- Unlimited daily searches
+- Price drop alerts — set a target price and get notified
+- Price history chart per product
+- "Good time to buy" score powered by ML trend analysis
+- Saved search history and wishlist
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Mobile app | React Native (Expo), TypeScript |
+| Navigation | React Navigation (Stack) |
+| State management | Zustand |
+| AI / Image extraction | Gemini Vision (gemini-1.5-flash) |
+| Price data | SerpApi (Google Shopping) |
+| Scraping fallback | ScrapeGraphAI |
+| Backend / Database | Supabase (Postgres) |
+| Subscriptions | RevenueCat SDK |
+| Notifications | OneSignal |
+
+---
+
+## Project Structure
+
+```
+Pretium/
+  src/
+    screens/
+      HomeScreen.tsx
+      SearchScreen.tsx
+      ResultsScreen.tsx
+      ProductDetailScreen.tsx
+      PaywallScreen.tsx
+    components/
+      SearchBar.tsx
+      ImagePickerInput.tsx
+      ResultCard.tsx
+      PriceTag.tsx
+    services/
+      gemini.ts          — Gemini Vision API integration
+      serpapi.ts         — Price fetching from Google Shopping
+      scraper.ts         — Fallback scraping via ScrapeGraphAI
+      supabase.ts        — Database client and queries
+      revenuecat.ts      — Subscription and entitlement checks
+    store/
+      useAppStore.ts     — Global Zustand state
+    navigation/
+      RootNavigator.tsx
+    types/
+      index.ts           — Shared TypeScript interfaces
+  app/
+    _layout.tsx          — Expo Router shell, renders RootNavigator
+  .agents/
+    skills/              — Installed agent skills
+  supabase/
+    schema.sql           — Database schema
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-### Other setup steps
+## Team
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Person | Role |
+|---|---|
+| Michy | React Native app, AI integrations, frontend, RevenueCat, all screens |
+| Mark | Product matching model, price history analysis, ML trend scoring, data pipeline |
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## Environment Variables
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
+EXPO_PUBLIC_GEMINI_API_KEY=
+EXPO_PUBLIC_SERPAPI_KEY=
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+REVENUECAT_API_KEY_ANDROID=
+ONESIGNAL_APP_ID=
+```
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## Getting Started
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+git clone <repo-url>
+cd Pretium
+npm install
+npx expo start
+```
+
+Scan the QR code with Expo Go on your Android device. Make sure your phone and laptop are on the same WiFi, or run `npx expo start --tunnel` if they're on different networks.
+
+---
+
+## Hackathon
+
+Submitted to: [RevenueCat Shipaton 2026](https://revenuecat-shipaton-2026.devpost.com)  
+Deadline: September 30, 2026  
+Target categories: Grand Prize, #BuildInPublic Award, HAMM Award
