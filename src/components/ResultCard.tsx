@@ -4,7 +4,7 @@ import { Linking, Pressable, StyleSheet } from 'react-native';
 import { PriceTag } from '@/components/PriceTag';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { PriceResult } from '@/types';
 
 interface ResultCardProps {
@@ -25,7 +25,7 @@ export function ResultCard({ result, index }: ResultCardProps) {
   };
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <ThemedView style={styles.card}>
       <ThemedView style={styles.imageWrap}>
         {result.imageUrl ? (
           <Image source={{ uri: result.imageUrl }} style={styles.image} contentFit="cover" />
@@ -37,24 +37,30 @@ export function ResultCard({ result, index }: ResultCardProps) {
       </ThemedView>
 
       <ThemedView style={styles.body}>
-        <ThemedText type="smallBold">{result.storeName}</ThemedText>
+        <ThemedView style={styles.storeRow}>
+          <ThemedText type="smallBold" style={styles.storeName} numberOfLines={1}>
+            {result.storeName}
+          </ThemedText>
+          {result.rating != null && (
+            <ThemedText type="small" style={styles.rating}>
+              ★ {result.rating.toFixed(1)}
+              {result.ratingCount != null ? ` (${result.ratingCount})` : ''}
+            </ThemedText>
+          )}
+        </ThemedView>
         {result.title ? (
           <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
             {result.title}
           </ThemedText>
         ) : null}
-        {result.rating != null ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            ★ {result.rating.toFixed(1)}
-            {result.ratingCount != null ? ` (${result.ratingCount})` : ''}
-          </ThemedText>
-        ) : null}
 
         <ThemedView style={styles.priceRow}>
           <PriceTag amount={result.totalCost} currency={result.currency} size="large" />
-          <ThemedText type="small" themeColor="textSecondary" style={styles.basePrice}>
-            {result.price > 0 ? `(base ${formatNumber(result.price)})` : ''}
-          </ThemedText>
+          {result.price > 0 && (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.basePrice}>
+              base {formatNumber(result.price)}
+            </ThemedText>
+          )}
         </ThemedView>
 
         <ThemedText type="small" themeColor="textSecondary">
@@ -85,17 +91,20 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     gap: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.large,
     padding: Spacing.three,
+    backgroundColor: Palette.surface,
+    borderWidth: 1,
+    borderColor: Palette.border,
   },
   imageWrap: {
     width: 72,
     height: 72,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.medium,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(127,127,127,0.15)',
+    backgroundColor: Palette.surfaceMuted,
   },
   image: {
     width: 72,
@@ -108,6 +117,19 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.one,
   },
+  storeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  storeName: {
+    flexShrink: 1,
+  },
+  rating: {
+    color: Palette.amber,
+    fontWeight: 700,
+  },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -118,10 +140,10 @@ const styles = StyleSheet.create({
   },
   buyButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#0A0F2C',
+    backgroundColor: Palette.dark,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.medium,
     marginTop: Spacing.one,
   },
   pressed: {

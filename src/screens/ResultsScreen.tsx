@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ResultCard } from '@/components/ResultCard';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPrices } from '@/services/serpapi';
 import type { PriceResult, Product } from '@/types';
@@ -109,12 +109,12 @@ export default function ResultsScreen() {
           ListEmptyComponent={
             loading ? (
               <ThemedView style={styles.center}>
-                <ActivityIndicator color="#0A0F2C" size="large" />
+                <ActivityIndicator color={Palette.dark} size="large" />
                 <ThemedText type="small" themeColor="textSecondary">
                   Searching retailers…
                 </ThemedText>
                 {[0, 1, 2, 3].map((i) => (
-                  <ThemedView key={i} type="backgroundElement" style={styles.skeleton} />
+                  <ThemedView key={i} style={styles.skeleton} />
                 ))}
               </ThemedView>
             ) : (
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: 180,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.large,
   },
   productName: {
     fontWeight: 700,
@@ -164,9 +164,9 @@ const styles = StyleSheet.create({
   sortChip: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
+    borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(127,127,127,0.3)',
+    borderColor: Palette.border,
   },
   separator: {
     height: Spacing.two,
@@ -180,7 +180,8 @@ const styles = StyleSheet.create({
   skeleton: {
     alignSelf: 'stretch',
     height: 100,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.large,
     opacity: 0.5,
+    backgroundColor: Palette.border,
   },
 });

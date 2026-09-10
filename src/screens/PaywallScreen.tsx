@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { getOfferings, purchasePremium, restorePurchases, revenueCatReady } from '@/services/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
 import type { PurchasesPackage } from 'react-native-purchases';
@@ -81,7 +81,7 @@ export default function PaywallScreen() {
               <ThemedView key={b.label} style={styles.benefit}>
                 <SymbolView
                   name={{ ios: b.icon, android: 'check_circle', web: 'check_circle' }}
-                  tintColor="#0A0F2C"
+                  tintColor={Palette.green}
                   size={22}
                 />
                 <ThemedText type="small">{b.label}</ThemedText>
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    borderRadius: Spacing.three,
+    borderRadius: Radius.large,
     padding: Spacing.four,
     gap: Spacing.three,
   },
@@ -158,16 +158,17 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   primaryButton: {
-    backgroundColor: '#0A0F2C',
-    borderRadius: Spacing.three,
+    backgroundColor: Palette.dark,
+    borderRadius: Radius.medium,
     paddingVertical: Spacing.three,
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryButton: {
     borderWidth: 1,
-    borderColor: '#0A0F2C',
-    borderRadius: Spacing.three,
+    borderColor: Palette.border,
+    backgroundColor: Palette.surface,
+    borderRadius: Radius.medium,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },

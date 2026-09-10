@@ -2,7 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Spacing, Palette } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 interface SearchBarProps {
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: Spacing.three,
-    backgroundColor: '#0A0F2C',
+    backgroundColor: Palette.dark,
     alignItems: 'center',
     justifyContent: 'center',
   },

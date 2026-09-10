@@ -1,26 +1,55 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Pretium design tokens — warm minimal marketplace style.
+ * Inspired by the reference UI: warm off-white background, warm neutral greys,
+ * near-black warm text, dark header, amber/green/blue accents.
  */
 
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
+export const Palette = {
+  /** Warm off-white app background. */
+  background: '#FBFAF6',
+  /** Pure white cards on the warm background. */
+  surface: '#FFFFFF',
+  /** Muted warm surface (secondary cards, search field). */
+  surfaceMuted: '#F1EEE7',
+  /** Warm border / selected surface. */
+  border: '#E7E4DA',
+  /** Primary text — warm near-black. */
+  text: '#151412',
+  /** Secondary text. */
+  textSecondary: '#73706C',
+  /** Tertiary / hints. */
+  textTertiary: '#A8A59C',
+  /** Dark surfaces (header band, primary CTA). */
+  dark: '#151412',
+  /** Raised dark surface. */
+  darkRaised: '#2E2E2D',
+  /** Amber accent — ratings, sale badges, highlights. */
+  amber: '#EB9A30',
+  /** Green accent — positive, in stock, savings. */
+  green: '#0CAE73',
+  /** Blue accent — links, info. */
+  blue: '#1868FB',
+  rating: '#EB9A30',
+} as const;
+
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: Palette.text,
+    background: Palette.background,
+    backgroundElement: Palette.surfaceMuted,
+    backgroundSelected: Palette.border,
+    textSecondary: Palette.textSecondary,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: Palette.background,
+    background: Palette.dark,
+    backgroundElement: Palette.darkRaised,
+    backgroundSelected: '#53524F',
+    textSecondary: Palette.textTertiary,
   },
 } as const;
 
@@ -59,6 +88,14 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+/** Card corner radius. */
+export const Radius = {
+  small: 8,
+  medium: 16,
+  large: 24,
+  pill: 999,
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

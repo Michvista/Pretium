@@ -4,7 +4,7 @@ import { Alert, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Palette, Spacing } from '@/constants/theme';
 
 export interface PickedImage {
   uri: string;
@@ -97,7 +97,7 @@ export function ImagePickerInput({ onImage, onError }: ImagePickerInputProps) {
         style={({ pressed }) => [styles.button, styles.secondary, pressed && styles.pressed]}>
         <SymbolView
           name={{ ios: 'photo.on.rectangle', android: 'photo_library', web: 'photo_library' }}
-          tintColor="#0A0F2C"
+          tintColor={Palette.dark}
           size={24}
         />
         <ThemedText type="smallBold">From gallery</ThemedText>
@@ -117,14 +117,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
-    backgroundColor: '#0A0F2C',
+    backgroundColor: Palette.dark,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.three,
   },
   secondary: {
-    backgroundColor: 'transparent',
+    backgroundColor: Palette.surface,
     borderWidth: 1,
-    borderColor: '#0A0F2C',
+    borderColor: Palette.border,
   },
   pressed: {
     opacity: 0.7,

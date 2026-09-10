@@ -1,6 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
+import { Fonts, Palette } from '@/constants/theme';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',
@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 700,
     fontFamily: Fonts.sans,
+    color: Palette.text,
   },
   large: {
     fontSize: 22,
