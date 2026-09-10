@@ -1,6 +1,4 @@
-import { StyleSheet, Text } from 'react-native';
-
-import { Fonts, Palette } from '@/constants/theme';
+import { Text } from 'react-native';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',
@@ -30,21 +28,9 @@ interface PriceTagProps {
 export function PriceTag({ amount, currency, size = 'small' }: PriceTagProps) {
   const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] ?? `${currency} `;
   return (
-    <Text style={[styles.text, size === 'large' && styles.large]}>
+    <Text className={`font-bold text-ink ${size === 'large' ? 'text-[22px]' : 'text-base'}`}>
       {symbol}
       {formatAmount(amount)}
     </Text>
   );
 }
-
-const styles = StyleSheet.create({
-  text: {
-    fontSize: 16,
-    fontWeight: 700,
-    fontFamily: Fonts.sans,
-    color: Palette.text,
-  },
-  large: {
-    fontSize: 22,
-  },
-});

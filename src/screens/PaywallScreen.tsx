@@ -1,12 +1,9 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Palette, Radius, Spacing } from '@/constants/theme';
 import { getOfferings, purchasePremium, restorePurchases, revenueCatReady } from '@/services/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
 import type { PurchasesPackage } from 'react-native-purchases';
@@ -64,119 +61,56 @@ export default function PaywallScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <ThemedView style={styles.hero}>
-            <ThemedText type="subtitle" style={styles.center}>
-              Go Premium
-            </ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.center}>
+    <View className="flex-1 bg-background">
+      <SafeAreaView className="flex-1" edges={['bottom']}>
+        <ScrollView contentContainerClassName="flex-grow justify-center gap-3 p-6">
+          <View className="items-center gap-2">
+            <Text className="text-[32px] font-bold leading-10 text-ink">Go Premium</Text>
+            <Text className="text-center text-sm text-muted">
               Get the full picture before you buy.
-            </ThemedText>
-          </ThemedView>
+            </Text>
+          </View>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
+          <View className="gap-3 rounded-3xl bg-surface-muted p-6">
             {BENEFITS.map((b) => (
-              <ThemedView key={b.label} style={styles.benefit}>
+              <View key={b.label} className="flex-row items-center gap-3">
                 <SymbolView
                   name={{ ios: b.icon, android: 'check_circle', web: 'check_circle' }}
-                  tintColor={Palette.green}
+                  tintColor="#0CAE73"
                   size={22}
                 />
-                <ThemedText type="small">{b.label}</ThemedText>
-              </ThemedView>
+                <Text className="text-sm text-ink">{b.label}</Text>
+              </View>
             ))}
-          </ThemedView>
+          </View>
 
-          <ThemedText type="default" style={styles.center}>
+          <Text className="text-center text-base text-ink">
             {pkg ? `${pkg.product.priceString} / month` : '$3.99 / month'}
-          </ThemedText>
+          </Text>
 
           <Pressable
             onPress={handlePurchase}
             disabled={busy}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              (pressed || busy) && styles.pressed,
-            ]}>
+            className="items-center justify-center rounded-2xl bg-dark py-3 active:opacity-70">
             {busy ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <ThemedText type="smallBold" style={{ color: '#fff' }}>
-                Go Premium
-              </ThemedText>
+              <Text className="text-sm font-bold text-white">Go Premium</Text>
             )}
           </Pressable>
 
           <Pressable
             onPress={handleRestore}
             disabled={busy}
-            style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-            <ThemedText type="smallBold">Restore Purchases</ThemedText>
+            className="items-center rounded-2xl border border-border bg-surface py-3 active:opacity-70">
+            <Text className="text-sm font-bold text-ink">Restore Purchases</Text>
           </Pressable>
 
-          <Pressable onPress={() => router.back()} style={styles.maybeLater}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Maybe Later
-            </ThemedText>
+          <Pressable onPress={() => router.back()} className="items-center py-2">
+            <Text className="text-sm text-muted">Maybe Later</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  content: {
-    padding: Spacing.four,
-    gap: Spacing.three,
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  hero: {
-    gap: Spacing.two,
-    alignItems: 'center',
-  },
-  center: {
-    textAlign: 'center',
-  },
-  card: {
-    borderRadius: Radius.large,
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  benefit: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  primaryButton: {
-    backgroundColor: Palette.dark,
-    borderRadius: Radius.medium,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: Palette.border,
-    backgroundColor: Palette.surface,
-    borderRadius: Radius.medium,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-  },
-  maybeLater: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-});

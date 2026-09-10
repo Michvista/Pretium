@@ -1,10 +1,7 @@
 import { Image } from 'expo-image';
-import { Linking, Pressable, StyleSheet } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 
 import { PriceTag } from '@/components/PriceTag';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { PriceResult } from '@/types';
 
 interface ResultCardProps {
@@ -13,7 +10,12 @@ interface ResultCardProps {
 }
 
 export function ResultCard({ result, index }: ResultCardProps) {
-  const shipping = result.shippingCost == null ? 'Shipping unavailable' : result.shippingCost === 0 ? 'Free shipping' : `Shipping +${formatShipping(result.shippingCost)}`;
+  const shipping =
+    result.shippingCost == null
+      ? 'Shipping unavailable'
+      : result.shippingCost === 0
+        ? 'Free shipping'
+        : `Shipping +${formatShipping(result.shippingCost)}`;
 
   const openLink = async () => {
     if (!result.productUrl) return;
@@ -25,57 +27,49 @@ export function ResultCard({ result, index }: ResultCardProps) {
   };
 
   return (
-    <ThemedView style={styles.card}>
-      <ThemedView style={styles.imageWrap}>
+    <View className="flex-row gap-3 rounded-3xl border border-border bg-surface p-3">
+      <View className="h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl bg-surface-muted">
         {result.imageUrl ? (
-          <Image source={{ uri: result.imageUrl }} style={styles.image} contentFit="cover" />
+          <Image source={{ uri: result.imageUrl }} className="h-[72px] w-[72px]" contentFit="cover" />
         ) : (
-          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.indexBadge}>
-            #{index + 1}
-          </ThemedText>
+          <Text className="text-lg font-bold text-faint">#{index + 1}</Text>
         )}
-      </ThemedView>
+      </View>
 
-      <ThemedView style={styles.body}>
-        <ThemedView style={styles.storeRow}>
-          <ThemedText type="smallBold" style={styles.storeName} numberOfLines={1}>
+      <View className="flex-1 gap-1">
+        <View className="flex-row items-center justify-between gap-2">
+          <Text className="shrink text-sm font-bold text-ink" numberOfLines={1}>
             {result.storeName}
-          </ThemedText>
+          </Text>
           {result.rating != null && (
-            <ThemedText type="small" style={styles.rating}>
+            <Text className="text-sm font-bold text-amber">
               ★ {result.rating.toFixed(1)}
               {result.ratingCount != null ? ` (${result.ratingCount})` : ''}
-            </ThemedText>
+            </Text>
           )}
-        </ThemedView>
+        </View>
         {result.title ? (
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+          <Text className="text-sm text-muted" numberOfLines={2}>
             {result.title}
-          </ThemedText>
+          </Text>
         ) : null}
 
-        <ThemedView style={styles.priceRow}>
+        <View className="flex-row items-baseline gap-2">
           <PriceTag amount={result.totalCost} currency={result.currency} size="large" />
           {result.price > 0 && (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.basePrice}>
-              base {formatNumber(result.price)}
-            </ThemedText>
+            <Text className="text-xs text-muted">base {formatNumber(result.price)}</Text>
           )}
-        </ThemedView>
+        </View>
 
-        <ThemedText type="small" themeColor="textSecondary">
-          {shipping}
-        </ThemedText>
+        <Text className="text-sm text-muted">{shipping}</Text>
 
         <Pressable
           onPress={openLink}
-          style={({ pressed }) => [styles.buyButton, pressed && styles.pressed]}>
-          <ThemedText type="smallBold" style={{ color: '#fff' }}>
-            Buy Now
-          </ThemedText>
+          className="mt-1 self-start rounded-2xl bg-dark px-3 py-2 active:opacity-70">
+          <Text className="text-sm font-bold text-white">Buy Now</Text>
         </Pressable>
-      </ThemedView>
-    </ThemedView>
+      </View>
+    </View>
   );
 }
 
@@ -86,67 +80,3 @@ function formatNumber(n: number): string {
 function formatShipping(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    gap: Spacing.three,
-    borderRadius: Radius.large,
-    padding: Spacing.three,
-    backgroundColor: Palette.surface,
-    borderWidth: 1,
-    borderColor: Palette.border,
-  },
-  imageWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.medium,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Palette.surfaceMuted,
-  },
-  image: {
-    width: 72,
-    height: 72,
-  },
-  indexBadge: {
-    fontSize: 20,
-  },
-  body: {
-    flex: 1,
-    gap: Spacing.one,
-  },
-  storeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
-  storeName: {
-    flexShrink: 1,
-  },
-  rating: {
-    color: Palette.amber,
-    fontWeight: 700,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: Spacing.two,
-  },
-  basePrice: {
-    fontSize: 12,
-  },
-  buyButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: Palette.dark,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: Radius.medium,
-    marginTop: Spacing.one,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-});

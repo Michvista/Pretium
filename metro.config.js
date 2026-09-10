@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
@@ -6,4 +7,4 @@ const config = getDefaultConfig(__dirname);
 // Fall back to the `main` field (index.cjs) so web bundles resolve cleanly.
 config.resolver.unstable_enablePackageExports = false;
 
-module.exports = config;
+module.exports = withNativeWind(config, { input: './src/global.css' });

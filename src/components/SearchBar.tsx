@@ -1,9 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
-
-import { Spacing, Palette } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Pressable, TextInput, View } from 'react-native';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -11,7 +8,6 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ placeholder = 'Search any product…', onSubmit }: SearchBarProps) {
-  const theme = useTheme();
   const [value, setValue] = useState('');
 
   const submit = () => {
@@ -21,16 +17,13 @@ export function SearchBar({ placeholder = 'Search any product…', onSubmit }: S
   };
 
   return (
-    <Pressable style={styles.row} onPress={submit}>
+    <View className="flex-row items-center gap-2">
       <TextInput
-        style={[
-          styles.input,
-          { backgroundColor: theme.backgroundElement, color: theme.text },
-        ]}
+        className="flex-1 rounded-2xl bg-surface-muted px-4 py-3 text-ink"
         value={value}
         onChangeText={setValue}
         placeholder={placeholder}
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor="#73706C"
         returnKeyType="search"
         onSubmitEditing={submit}
         autoCorrect={false}
@@ -38,42 +31,13 @@ export function SearchBar({ placeholder = 'Search any product…', onSubmit }: S
       />
       <Pressable
         onPress={submit}
-        style={({ pressed }) => [
-          styles.button,
-          pressed && styles.buttonPressed,
-        ]}>
+        className="h-12 w-12 items-center justify-center rounded-2xl bg-dark active:opacity-70">
         <SymbolView
           name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
           tintColor="#fff"
           size={20}
         />
       </Pressable>
-    </Pressable>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  input: {
-    flex: 1,
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-  },
-  button: {
-    width: 48,
-    height: 48,
-    borderRadius: Spacing.three,
-    backgroundColor: Palette.dark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-});

@@ -5,17 +5,14 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
+  Text,
   TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ImagePickerInput, type PickedImage } from '@/components/ImagePickerInput';
 import { SearchBar } from '@/components/SearchBar';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Palette, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { extractProductFromImage } from '@/services/gemini';
 import { extractProductFromLink } from '@/services/linkExtractor';
 import { useAppStore } from '@/store/useAppStore';
@@ -26,7 +23,6 @@ type InputMode = 'search' | 'photo' | 'link';
 const QUICK_SEARCHES = ['Nike Air Force 1 White', 'iPhone 16 Pro 256GB', 'AirPods Pro 2'];
 
 export default function HomeScreen() {
-  const theme = useTheme();
   const addRecentSearch = useAppStore((s) => s.addRecentSearch);
   const recentSearches = useAppStore((s) => s.recentSearches);
   const checkAndIncrementSearch = useAppStore((s) => s.checkAndIncrementSearch);
@@ -87,223 +83,110 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.headerBand}>
+    <View className="flex-1 bg-background">
+      <View className="rounded-b-3xl bg-dark">
         <SafeAreaView edges={['top']}>
-          <ThemedView style={styles.headerInner}>
-            <ThemedText type="subtitle" style={styles.brand}>
-              Pretium
-            </ThemedText>
-            <ThemedText style={styles.tagline}>Find the true price of anything, anywhere.</ThemedText>
+          <View className="gap-1 bg-dark px-6 pb-4 pt-4">
+            <Text className="text-[32px] font-bold leading-10 text-white">Pretium</Text>
+            <Text className="text-sm text-faint">Find the true price of anything, anywhere.</Text>
             {!isPremium && (
-              <ThemedView style={styles.premiumRow}>
-                <ThemedText style={styles.premiumHint}>
+              <View className="mt-2 flex-row items-center justify-between">
+                <Text className="text-[13px] text-faint">
                   {Math.max(0, 5 - searchCount)} of 5 free searches left today
-                </ThemedText>
+                </Text>
                 <Pressable onPress={() => router.push('/paywall')} hitSlop={8}>
-                  <ThemedText style={styles.premiumLink}>Go Premium →</ThemedText>
+                  <Text className="text-sm font-bold text-amber">Go Premium →</Text>
                 </Pressable>
-              </ThemedView>
+              </View>
             )}
-          </ThemedView>
+          </View>
         </SafeAreaView>
-      </ThemedView>
+      </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ThemedView style={styles.segmented}>
+      <ScrollView contentContainerClassName="p-6 gap-3" keyboardShouldPersistTaps="handled">
+        <View className="flex-row gap-2 rounded-2xl border border-border bg-surface p-0.5">
           {(['search', 'photo', 'link'] as const).map((m) => (
             <Pressable
               key={m}
               onPress={() => setMode(m)}
-              style={[
-                styles.segment,
-                { backgroundColor: mode === m ? theme.background : 'transparent' },
-              ]}>
-              <ThemedText
-                type="smallBold"
-                themeColor={mode === m ? 'text' : 'textSecondary'}>
+              className={`flex-1 items-center rounded-[14px] py-2 ${
+                mode === m ? 'bg-surface-muted' : ''
+              }`}>
+              <Text className={`text-sm font-bold ${mode === m ? 'text-ink' : 'text-muted'}`}>
                 {m === 'search' ? 'Search' : m === 'photo' ? 'Photo' : 'Link'}
-              </ThemedText>
+              </Text>
             </Pressable>
           ))}
-        </ThemedView>
+        </View>
 
         {mode === 'search' && (
-          <ThemedView style={styles.panel}>
+          <View className="gap-3">
             <SearchBar onSubmit={handleTextSubmit} />
-            <ThemedView style={styles.chips}>
+            <View className="flex-row flex-wrap gap-2">
               {QUICK_SEARCHES.map((q) => (
                 <Pressable
                   key={q}
                   onPress={() => handleTextSubmit(q)}
-                  style={({ pressed }) => [styles.chip, pressed && { opacity: 0.7 }]}>
-                  <ThemedText type="small">{q}</ThemedText>
+                  className="rounded-full border border-border bg-surface-muted px-3 py-2 active:opacity-70">
+                  <Text className="text-sm text-ink">{q}</Text>
                 </Pressable>
               ))}
-            </ThemedView>
-          </ThemedView>
+            </View>
+          </View>
         )}
 
         {mode === 'photo' && (
-          <ThemedView style={styles.panel}>
+          <View className="gap-3">
             <ImagePickerInput onImage={handleImage} />
-            <ThemedText type="small" themeColor="textSecondary">
+            <Text className="text-sm text-muted">
               Screenshot a product from an ad, website, or in a store — AI will identify it.
-            </ThemedText>
-          </ThemedView>
+            </Text>
+          </View>
         )}
 
         {mode === 'link' && (
-          <ThemedView style={styles.panel}>
-            <ThemedView style={styles.linkRow}>
+          <View className="gap-3">
+            <View className="flex-row gap-2">
               <TextInput
-                style={[
-                  styles.linkInput,
-                  { backgroundColor: theme.backgroundElement, color: theme.text },
-                ]}
+                className="flex-1 rounded-2xl bg-surface-muted px-4 py-3 text-ink"
                 value={linkValue}
                 onChangeText={setLinkValue}
                 placeholder="Paste an Amazon or Jumia link"
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor="#73706C"
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
               />
               <Pressable
                 onPress={handleLinkSubmit}
-                style={({ pressed }) => [styles.linkButton, pressed && { opacity: 0.7 }]}>
-                <ThemedText type="smallBold" style={{ color: '#fff' }}>
-                  Extract
-                </ThemedText>
+                className="justify-center rounded-2xl bg-dark px-4 active:opacity-70">
+                <Text className="text-sm font-bold text-white">Extract</Text>
               </Pressable>
-            </ThemedView>
-            <ThemedText type="small" themeColor="textSecondary">
+            </View>
+            <Text className="text-sm text-muted">
               Product info is read from the page’s Open Graph tags.
-            </ThemedText>
-          </ThemedView>
+            </Text>
+          </View>
         )}
 
         {recentSearches.length > 0 && (
-          <ThemedView style={styles.recent}>
-            <ThemedText type="smallBold">Recent</ThemedText>
+          <View className="mt-2 gap-1">
+            <Text className="text-sm font-bold text-ink">Recent</Text>
             {recentSearches.slice(0, 3).map((p) => (
-              <ThemedText key={p.name + p.source} type="small" themeColor="textSecondary">
+              <Text key={p.name + p.source} className="text-sm text-muted">
                 {p.name}
-              </ThemedText>
+              </Text>
             ))}
-          </ThemedView>
+          </View>
         )}
 
         {busy && (
-          <ThemedView style={styles.busy}>
-            <ActivityIndicator color={Palette.dark} />
-            <ThemedText type="small">{busyLabel}</ThemedText>
-          </ThemedView>
+          <View className="flex-row items-center justify-center gap-2 py-3">
+            <ActivityIndicator color="#151412" />
+            <Text className="text-sm text-ink">{busyLabel}</Text>
+          </View>
         )}
       </ScrollView>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerBand: {
-    backgroundColor: Palette.dark,
-    borderBottomLeftRadius: Radius.large,
-    borderBottomRightRadius: Radius.large,
-  },
-  headerInner: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.four,
-    gap: Spacing.one,
-    backgroundColor: Palette.dark,
-  },
-  brand: {
-    color: '#FFFFFF',
-    fontWeight: 700,
-  },
-  tagline: {
-    color: '#A8A59C',
-  },
-  premiumRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.two,
-  },
-  premiumHint: {
-    color: '#A8A59C',
-    fontSize: 13,
-  },
-  premiumLink: {
-    color: Palette.amber,
-    fontWeight: 700,
-    fontSize: 14,
-  },
-  content: {
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  segmented: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-    borderRadius: Radius.medium,
-    padding: Spacing.half,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: Palette.border,
-  },
-  segment: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Radius.medium - Spacing.half,
-  },
-  panel: {
-    gap: Spacing.three,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-  },
-  chip: {
-    backgroundColor: Palette.surfaceMuted,
-    borderWidth: 1,
-    borderColor: Palette.border,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  linkRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  linkInput: {
-    flex: 1,
-    borderRadius: Radius.medium,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-  },
-  linkButton: {
-    backgroundColor: Palette.dark,
-    borderRadius: Radius.medium,
-    paddingHorizontal: Spacing.three,
-    justifyContent: 'center',
-  },
-  recent: {
-    gap: Spacing.one,
-    marginTop: Spacing.two,
-  },
-  busy: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.three,
-  },
-});

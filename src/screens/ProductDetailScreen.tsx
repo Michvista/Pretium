@@ -1,9 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 import type { Product } from '@/types';
 
 export default function ProductDetailScreen() {
@@ -18,26 +15,13 @@ export default function ProductDetailScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="default">{product?.name ?? 'Unknown product'}</ThemedText>
-      <ThemedView style={styles.empty}>
-        <ThemedText type="small" themeColor="textSecondary">
+    <View className="flex-1 gap-3 bg-background p-4">
+      <Text className="text-lg font-bold text-ink">{product?.name ?? 'Unknown product'}</Text>
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-sm text-muted">
           Price history and trend chart will render here.
-        </ThemedText>
-      </ThemedView>
-    </ThemedView>
+        </Text>
+      </View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: Spacing.three,
-    gap: Spacing.three,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

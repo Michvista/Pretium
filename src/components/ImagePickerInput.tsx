@@ -1,10 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert, Pressable, StyleSheet } from 'react-native';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Palette, Spacing } from '@/constants/theme';
+import { Alert, Pressable, Text, View } from 'react-native';
 
 export interface PickedImage {
   uri: string;
@@ -79,54 +75,27 @@ export function ImagePickerInput({ onImage, onError }: ImagePickerInputProps) {
   };
 
   return (
-    <ThemedView style={styles.row}>
+    <View className="flex-row gap-2">
       <Pressable
         onPress={handleCamera}
-        style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+        className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl bg-dark py-3 active:opacity-70">
         <SymbolView
           name={{ ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' }}
           tintColor="#fff"
           size={24}
         />
-        <ThemedText type="smallBold" style={{ color: '#fff' }}>
-          Take photo
-        </ThemedText>
+        <Text className="font-bold text-white">Take photo</Text>
       </Pressable>
       <Pressable
         onPress={handleLibrary}
-        style={({ pressed }) => [styles.button, styles.secondary, pressed && styles.pressed]}>
+        className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 active:opacity-70">
         <SymbolView
           name={{ ios: 'photo.on.rectangle', android: 'photo_library', web: 'photo_library' }}
-          tintColor={Palette.dark}
+          tintColor="#151412"
           size={24}
         />
-        <ThemedText type="smallBold">From gallery</ThemedText>
+        <Text className="font-bold text-ink">From gallery</Text>
       </Pressable>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  button: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    backgroundColor: Palette.dark,
-    paddingVertical: Spacing.three,
-    borderRadius: Spacing.three,
-  },
-  secondary: {
-    backgroundColor: Palette.surface,
-    borderWidth: 1,
-    borderColor: Palette.border,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-});
