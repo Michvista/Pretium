@@ -1,6 +1,7 @@
-import { SymbolView } from 'expo-symbols';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Pressable, Text, View } from 'react-native';
+
+import { Icon } from '@/components/Icon';
 
 export interface PickedImage {
   uri: string;
@@ -79,21 +80,13 @@ export function ImagePickerInput({ onImage, onError }: ImagePickerInputProps) {
       <Pressable
         onPress={handleCamera}
         className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl bg-dark py-3 active:opacity-70">
-        <SymbolView
-          name={{ ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' }}
-          tintColor="#fff"
-          size={24}
-        />
+        <Icon name="camera" size={24} color="#fff" />
         <Text className="font-bold text-white">Take photo</Text>
       </Pressable>
       <Pressable
         onPress={handleLibrary}
         className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 active:opacity-70">
-        <SymbolView
-          name={{ ios: 'photo.on.rectangle', android: 'photo_library', web: 'photo_library' }}
-          tintColor="#151412"
-          size={24}
-        />
+        <Icon name="images" size={24} color="#151412" />
         <Text className="font-bold text-ink">From gallery</Text>
       </Pressable>
     </View>

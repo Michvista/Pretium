@@ -1,19 +1,19 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon, type IconName } from '@/components/Icon';
 import { getOfferings, purchasePremium, restorePurchases, revenueCatReady } from '@/services/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
 import type { PurchasesPackage } from 'react-native-purchases';
 
-const BENEFITS = [
-  { icon: 'infinity', label: 'Unlimited daily price searches' },
-  { icon: 'bell.badge', label: 'Price drop alerts on your watchlist' },
-  { icon: 'chart.line.uptrend.xyaxis', label: 'Price history & trend charts' },
+const BENEFITS: { icon: IconName; label: string }[] = [
+  { icon: 'infinite', label: 'Unlimited daily price searches' },
+  { icon: 'notifications', label: 'Price drop alerts on your watchlist' },
+  { icon: 'stats-chart', label: 'Price history & trend charts' },
   { icon: 'bookmark', label: 'Saved search history & wishlist' },
-] as const;
+];
 
 export default function PaywallScreen() {
   const setPremium = useAppStore((s) => s.setPremium);
@@ -74,11 +74,7 @@ export default function PaywallScreen() {
           <View className="gap-3 rounded-3xl bg-surface-muted p-6">
             {BENEFITS.map((b) => (
               <View key={b.label} className="flex-row items-center gap-3">
-                <SymbolView
-                  name={{ ios: b.icon, android: 'check_circle', web: 'check_circle' }}
-                  tintColor="#0CAE73"
-                  size={22}
-                />
+                <Icon name={b.icon} size={22} color="#0CAE73" />
                 <Text className="text-sm text-ink">{b.label}</Text>
               </View>
             ))}

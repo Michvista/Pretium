@@ -1,6 +1,7 @@
-import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
+
+import { Icon } from '@/components/Icon';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -32,11 +33,7 @@ export function SearchBar({ placeholder = 'Search any product…', onSubmit }: S
       <Pressable
         onPress={submit}
         className="h-12 w-12 items-center justify-center rounded-2xl bg-dark active:opacity-70">
-        <SymbolView
-          name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-          tintColor="#fff"
-          size={20}
-        />
+        <Icon name="search" size={20} color="#fff" />
       </Pressable>
     </View>
   );
