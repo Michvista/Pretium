@@ -1,14 +1,16 @@
 import Constants from 'expo-constants';
 import { Alert, Platform } from 'react-native';
-import { LogLevel, OneSignal } from 'react-native-onesignal';
+
+import type { LogLevel as LogLevelType, OneSignal as OneSignalType } from 'react-native-onesignal';
 
 /**
  * Centralized OneSignal integration for Pretium.
  * All OneSignal SDK calls go through this module (per SDK best practice).
  *
  * NOTE: The OneSignal native module is only present in development builds
- * (EAS / `expo run:*`). It does not exist in Expo Go, so every call is
- * guarded and logs a warning instead of crashing.
+ * (EAS / `expo run:*`). It does not exist in Expo Go — and importing the
+ * package at module scope THROWS there — so it is required lazily inside a
+ * try/catch and every call is guarded.
  */
 
 const APP_ID =
@@ -17,6 +19,24 @@ const APP_ID =
   process.env.ONESIGNAL_APP_ID;
 
 let integrationDialogShown = false;
+let onesignalLoaded = false;
+let OneSignal: typeof OneSignalType | null = null;
+let LogLevel: typeof LogLevelType | null = null;
+
+/** Lazily loads react-native-onesignal. Returns null (with a warning) if unavailable. */
+function getOneSignal(): typeof OneSignalType | null {
+  if (!onesignalLoaded) {
+    onesignalLoaded = true;
+    try {
+      const mod = require('react-native-onesignal');
+      OneSignal = mod.OneSignal;
+      LogLevel = mod.LogLevel;
+    } catch (error) {
+      console.warn('[Pretium] OneSignal unavailable in this runtime (expected in Expo Go):', error);
+    }
+  }
+  return OneSignal;
+}
 
 /** A real, server-assigned subscription ID is non-empty and not the local- placeholder. */
 export function isRegistered(subscriptionId: string | null | undefined): boolean {
@@ -48,8 +68,10 @@ function maybeShowIntegrationCompleteDialog(subscriptionId: string | null | unde
 
 /** The only place push permission is requested — from the verification dialog button. */
 export async function requestNotificationPermission(): Promise<boolean> {
+  const os = getOneSignal();
+  if (!os) return false;
   try {
-    return await OneSignal.Notifications.requestPermission(true);
+    return await os.Notifications.requestPermission(true);
   } catch (error) {
     console.warn('[Pretium] OneSignal permission request failed:', error);
     return false;
@@ -69,16 +91,19 @@ export function initOneSignal(): void {
     console.warn('[Pretium] OneSignal App ID missing — set extra.oneSignalAppId in app.json.');
     return;
   }
+  const os = getOneSignal();
+  if (!os) return;
+
   try {
-    OneSignal.Debug.setLogLevel(LogLevel.Warn);
-    OneSignal.initialize(APP_ID);
+    os.Debug.setLogLevel(LogLevel ? LogLevel.Warn : 1);
+    os.initialize(APP_ID);
 
     // Evaluate current ID immediately (may already be server-assigned) and
     // on every change. Kept alive for the app lifetime (module scope).
-    OneSignal.User.pushSubscription.addEventListener('change', (subscription) => {
+    os.User.pushSubscription.addEventListener('change', (subscription) => {
       maybeShowIntegrationCompleteDialog(subscription.current.id);
     });
-    OneSignal.User.pushSubscription.getIdAsync().then(maybeShowIntegrationCompleteDialog);
+    os.User.pushSubscription.getIdAsync().then(maybeShowIntegrationCompleteDialog);
   } catch (error) {
     console.warn('[Pretium] OneSignal init failed (expected in Expo Go):', error);
   }
@@ -86,32 +111,40 @@ export function initOneSignal(): void {
 
 /** Identify the user (e.g. with a RevenueCat / Supabase user id). */
 export function loginOneSignal(userId: string): void {
+  const os = getOneSignal();
+  if (!os) return;
   try {
-    OneSignal.login(userId);
+    os.login(userId);
   } catch (error) {
     console.warn('[Pretium] OneSignal login failed:', error);
   }
 }
 
 export function logoutOneSignal(): void {
+  const os = getOneSignal();
+  if (!os) return;
   try {
-    OneSignal.logout();
+    os.logout();
   } catch (error) {
     console.warn('[Pretium] OneSignal logout failed:', error);
   }
 }
 
 export function setOneSignalTag(key: string, value: string): void {
+  const os = getOneSignal();
+  if (!os) return;
   try {
-    OneSignal.User.addTag(key, value);
+    os.User.addTag(key, value);
   } catch (error) {
     console.warn('[Pretium] OneSignal addTag failed:', error);
   }
 }
 
 export function removeOneSignalTag(key: string): void {
+  const os = getOneSignal();
+  if (!os) return;
   try {
-    OneSignal.User.removeTag(key);
+    os.User.removeTag(key);
   } catch (error) {
     console.warn('[Pretium] OneSignal removeTag failed:', error);
   }
