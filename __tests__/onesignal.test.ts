@@ -1,3 +1,4 @@
+import { NativeModules } from 'react-native';
 import { OneSignal } from 'react-native-onesignal';
 
 import {
@@ -24,6 +25,10 @@ describe('isRegistered', () => {
 });
 
 describe('initOneSignal', () => {
+  beforeEach(() => {
+    NativeModules.OneSignal = {};
+  });
+
   it('initializes with the app id and wires the observer without prompting permission', () => {
     initOneSignal();
     expect(OneSignal.initialize).toHaveBeenCalledWith('test-app-id');
@@ -33,6 +38,10 @@ describe('initOneSignal', () => {
 });
 
 describe('requestNotificationPermission', () => {
+  beforeEach(() => {
+    NativeModules.OneSignal = {};
+  });
+
   it('requests permission through the SDK', async () => {
     await expect(requestNotificationPermission()).resolves.toBe(true);
     expect(OneSignal.Notifications.requestPermission).toHaveBeenCalledWith(true);
@@ -40,6 +49,10 @@ describe('requestNotificationPermission', () => {
 });
 
 describe('loginOneSignal', () => {
+  beforeEach(() => {
+    NativeModules.OneSignal = {};
+  });
+
   it('logs the user in via the SDK', () => {
     loginOneSignal('user-123');
     expect(OneSignal.login).toHaveBeenCalledWith('user-123');

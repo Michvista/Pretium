@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { Alert, Platform } from 'react-native';
+import { Alert, NativeModules, Platform } from 'react-native';
 
 import type { LogLevel as LogLevelType, OneSignal as OneSignalType } from 'react-native-onesignal';
 
@@ -8,9 +8,11 @@ import type { LogLevel as LogLevelType, OneSignal as OneSignalType } from 'react
  * All OneSignal SDK calls go through this module (per SDK best practice).
  *
  * NOTE: The OneSignal native module is only present in development builds
- * (EAS / `expo run:*`). It does not exist in Expo Go — and importing the
- * package at module scope THROWS there — so it is required lazily inside a
- * try/catch and every call is guarded.
+ * (EAS / `expo run:*`) and Android Expo Go. On iOS Expo Go it is absent,
+ * and merely evaluating the react-native-onesignal package throws (its
+ * module scope builds a NativeEventEmitter from the missing native module).
+ * So we check `NativeModules.OneSignal` first and never require the package
+ * when it's missing.
  */
 
 const APP_ID =
@@ -27,12 +29,21 @@ let LogLevel: typeof LogLevelType | null = null;
 function getOneSignal(): typeof OneSignalType | null {
   if (!onesignalLoaded) {
     onesignalLoaded = true;
+    // Evaluating react-native-onesignal at module scope throws when the
+    // native module is missing (iOS Expo Go). Guard before requiring.
+    if (!NativeModules.OneSignal) {
+      console.warn(
+        '[Pretium] OneSignal native module not present — push notifications disabled ' +
+          '(expected in iOS Expo Go; use a development build).'
+      );
+      return OneSignal;
+    }
     try {
       const mod = require('react-native-onesignal');
       OneSignal = mod.OneSignal;
       LogLevel = mod.LogLevel;
     } catch (error) {
-      console.warn('[Pretium] OneSignal unavailable in this runtime (expected in Expo Go):', error);
+      console.warn('[Pretium] Failed to load react-native-onesignal:', error);
     }
   }
   return OneSignal;
