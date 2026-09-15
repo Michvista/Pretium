@@ -1,7 +1,9 @@
 import type { Product } from '@/types';
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL ?? 'gemini-1.5-flash';
+// gemini-1.5-flash is deprecated and gemini-2.x models are locked for new
+// keys; gemini-3.6-flash is the current stable flash model (multimodal).
+const MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL ?? 'gemini-3.6-flash';
 
 const SYSTEM_PROMPT = `You are a product identification engine for a price comparison app called Pretium.
 Look at the product image and return STRICT JSON with these fields:
