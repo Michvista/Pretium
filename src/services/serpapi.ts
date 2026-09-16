@@ -130,7 +130,9 @@ export async function fetchPrices(product: Product): Promise<PriceResult[]> {
     return [];
   }
 
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+  // gl=us&hl=en force US Google Shopping regardless of the requester's IP —
+  // otherwise SerpApi geo-locates by IP and some regions return no results.
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&gl=us&hl=en&api_key=${API_KEY}`;
   const data = await callSerpApi(url);
   if (!data) {
     console.warn('[Pretium] SerpApi unreachable after retries.');
