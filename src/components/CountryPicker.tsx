@@ -46,7 +46,7 @@ export function CountryPicker() {
               </Pressable>
             </View>
             <Text className="mb-3 text-sm text-muted">
-              Pick up to {MAX_COUNTRIES}. Each country uses 1 price search (SerpApi quota).
+              Pick up to {MAX_COUNTRIES} to compare prices across.
             </Text>
 
             <ScrollView className="max-h-[380px]">
