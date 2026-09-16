@@ -71,7 +71,7 @@ export const COUNTRIES: CountryOption[] = COUNTRY_ENTRIES.map(([code, name]) => 
   flag: flagEmoji(code),
 }));
 
-export const MAX_COUNTRIES = 3;
+export const MAX_COUNTRIES = 2;
 
 export function countryName(code: string): string {
   return COUNTRIES.find((c) => c.code === code)?.name ?? code.toUpperCase();

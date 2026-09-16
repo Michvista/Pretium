@@ -18,12 +18,13 @@ export function ResultCard({ result, index }: ResultCardProps) {
         : `Shipping +${formatShipping(result.shippingCost)}`;
 
   const confidence = (result as PriceResult & { matchConfidence?: number }).matchConfidence;
+  const pct = confidence != null ? Math.round(confidence * 100) : null;
   const matchBadge =
-    confidence == null
+    pct == null
       ? null
-      : confidence >= 0.9
-        ? { label: 'Verified match', cls: 'bg-green text-white' }
-        : { label: 'Possible match', cls: 'bg-amber text-white' };
+      : confidence! >= 0.9
+        ? { label: `Verified match · ${pct}%`, cls: 'bg-green text-white' }
+        : { label: `Possible match · ${pct}%`, cls: 'bg-amber text-white' };
 
   const openLink = async () => {
     if (!result.productUrl) return;

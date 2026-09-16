@@ -39,7 +39,7 @@ const DEFAULT_COUNTRIES = (process.env.EXPO_PUBLIC_SERPAPI_COUNTRIES ?? 'us')
   .split(',')
   .map((c) => c.trim().toLowerCase())
   .filter(Boolean)
-  .slice(0, 3);
+  .slice(0, 2);
 
 export const useAppStore = create<AppState>()((set, get) => ({
   recentSearches: [],
@@ -53,7 +53,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   clearRecentSearches: () => set({ recentSearches: [] }),
 
   selectedCountries: DEFAULT_COUNTRIES,
-  setSelectedCountries: (codes) => set({ selectedCountries: codes.slice(0, 3) }),
+  setSelectedCountries: (codes) => set({ selectedCountries: codes.slice(0, 2) }),
 
   isPremium: false,
   setPremium: (value) => set({ isPremium: value }),
