@@ -18,9 +18,17 @@ interface SerpApiShoppingResult {
   extensions?: string[];
 }
 
+interface SerpApiOrganicResult {
+  title?: string;
+  link?: string;
+  source?: string;
+  snippet?: string;
+}
+
 interface SerpApiResponse {
   error?: string;
   shopping_results?: SerpApiShoppingResult[];
+  organic_results?: SerpApiOrganicResult[];
 }
 
 function buildQuery(product: Product): string {
@@ -74,9 +82,41 @@ function mapResult(raw: SerpApiShoppingResult): PriceResult {
   };
 }
 
+async function callSerpApi(url: string): Promise<SerpApiResponse | null> {
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        await delay(600 * (attempt + 1));
+        continue;
+      }
+      const data = (await response.json()) as SerpApiResponse;
+      // SerpApi sometimes transiently returns "Google hasn't returned any
+      // results" — retry before giving up.
+      if (data.error || !data.shopping_results) {
+        if (attempt < MAX_ATTEMPTS - 1) {
+          await delay(800 * (attempt + 1));
+          continue;
+        }
+      }
+      return data;
+    } catch {
+      if (attempt >= MAX_ATTEMPTS - 1) return null;
+      await delay(600 * (attempt + 1));
+    }
+  }
+  return null;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Fetches price results for a product via the SerpApi Google Shopping engine.
  * Results are cached (Supabase, 1h TTL) and sorted cheapest-first.
+ * Falls back to organic results when the shopping engine returns nothing.
  */
 export async function fetchPrices(product: Product): Promise<PriceResult[]> {
   const query = buildQuery(product);
@@ -90,34 +130,39 @@ export async function fetchPrices(product: Product): Promise<PriceResult[]> {
     return [];
   }
 
-  try {
-    const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.warn(`[Pretium] SerpApi HTTP ${response.status}`);
-      return [];
-    }
-    const data = (await response.json()) as SerpApiResponse;
-    if (data.error) {
-      console.warn('[Pretium] SerpApi error:', data.error);
-      return [];
-    }
-
-    const results = (data.shopping_results ?? [])
-      .map(mapResult)
-      .filter((r) => r.price > 0 && r.productUrl.length > 0)
-      .sort((a, b) => a.totalCost - b.totalCost);
-
-    await setCachedResults(queryHash, results);
-    if (results.length > 0) {
-      const productHash = await md5(
-        [product.name, product.brand ?? '', product.model ?? ''].join('|')
-      );
-      await savePriceHistory(productHash, results);
-    }
-    return results;
-  } catch (error) {
-    console.warn('[Pretium] SerpApi fetch failed:', error);
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+  const data = await callSerpApi(url);
+  if (!data) {
+    console.warn('[Pretium] SerpApi unreachable after retries.');
     return [];
   }
+  if (data.error) {
+    console.warn('[Pretium] SerpApi error:', data.error);
+    return [];
+  }
+
+  let shopping = data.shopping_results ?? [];
+  if (shopping.length === 0 && (data.organic_results ?? []).length > 0) {
+    console.warn('[Pretium] No shopping results — falling back to organic results.');
+    shopping = (data.organic_results ?? []).map((o) => ({
+      title: o.title,
+      link: o.link,
+      source: o.source ?? 'Web',
+      thumbnail: undefined,
+    }));
+  }
+
+  const results = shopping
+    .map(mapResult)
+    .filter((r) => r.price > 0 && r.productUrl.length > 0)
+    .sort((a, b) => a.totalCost - b.totalCost);
+
+  await setCachedResults(queryHash, results);
+  if (results.length > 0) {
+    const productHash = await md5(
+      [product.name, product.brand ?? '', product.model ?? ''].join('|')
+    );
+    await savePriceHistory(productHash, results);
+  }
+  return results;
 }

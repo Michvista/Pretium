@@ -69,7 +69,7 @@ describe('extractProductFromImage', () => {
       source: 'image',
       imageUrl: 'file:///tmp.png',
     });
-    expect(product.searchQuery).toBe('Sony Sony WH-1000XM5 WH-1000XM5 Black');
+    expect(product.searchQuery).toBe('Sony WH-1000XM5 Black');
   });
 
   it('throws when Gemini returns an empty response', async () => {

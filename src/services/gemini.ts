@@ -103,7 +103,15 @@ export function buildSearchQuery(product: {
   color?: string | null;
   size?: string | null;
 }): string {
+  const seen = new Set<string>();
   return [product.brand, product.name, product.model, product.color, product.size]
     .filter((part) => part && part.trim().length > 0)
+    .flatMap((part) => part!.trim().split(/\s+/))
+    .filter((token) => {
+      const key = token.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .join(' ');
 }

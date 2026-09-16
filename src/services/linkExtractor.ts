@@ -1,4 +1,3 @@
-import { buildSearchQuery } from '@/services/gemini';
 import type { Product } from '@/types';
 
 interface OgTags {
@@ -55,6 +54,18 @@ function extractOgTags(html: string): OgTags {
   };
 }
 
+/** Cleans a retailer title into a tight search query (drops "Buy...", "at Store", suffixes). */
+function cleanQueryName(title: string): string {
+  return title
+    .replace(/^buy\s+/i, '')
+    .replace(/\s*at\s+[\w.\-]+\s*.*$/i, '')
+    .replace(/\s*[|–—-]\s*.*$/i, '')
+    .replace(/[®™©]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+}
+
 /**
  * Fetches a retail URL and maps its Open Graph tags onto a Product.
  * Throws if the page can't be fetched or no title is found.
@@ -79,6 +90,7 @@ export async function extractProductFromLink(url: string): Promise<Product> {
   }
 
   const name = og.title;
+  const cleanName = cleanQueryName(name);
   return {
     name,
     brand: og.siteName || null,
@@ -88,6 +100,6 @@ export async function extractProductFromLink(url: string): Promise<Product> {
     currency: og.currency,
     source: 'link',
     sourceUrl: url,
-    searchQuery: buildSearchQuery({ name, brand: og.siteName || null }),
+    searchQuery: cleanName,
   };
 }
