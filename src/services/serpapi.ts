@@ -7,8 +7,11 @@ const API_KEY = process.env.EXPO_PUBLIC_SERPAPI_KEY;
 interface SerpApiShoppingResult {
   title?: string;
   link?: string;
+  product_link?: string;
+  product_id?: string;
   source?: string;
   price?: string;
+  extracted_price?: number;
   currency?: string;
   thumbnail?: string;
   rating?: number | string;
@@ -62,7 +65,7 @@ function parseDeliveryCost(delivery?: string): number | null {
 
 function mapResult(raw: SerpApiShoppingResult): PriceResult {
   const priceText = raw.price ?? raw.offers?.[0]?.price;
-  const price = parsePriceString(priceText) ?? 0;
+  const price = parsePriceString(priceText) ?? raw.extracted_price ?? 0;
   const currency = raw.currency ?? detectCurrency(priceText);
   const shippingCost = parseDeliveryCost(raw.delivery);
   const totalCost = Math.round((price + (shippingCost ?? 0)) * 100) / 100;
@@ -73,7 +76,7 @@ function mapResult(raw: SerpApiShoppingResult): PriceResult {
     currency,
     shippingCost,
     totalCost,
-    productUrl: raw.link ?? '',
+    productUrl: raw.product_link ?? raw.link ?? '',
     inStock: true,
     title: raw.title,
     imageUrl: raw.thumbnail ?? null,
@@ -158,6 +161,12 @@ export async function fetchPrices(product: Product): Promise<PriceResult[]> {
     .map(mapResult)
     .filter((r) => r.price > 0 && r.productUrl.length > 0)
     .sort((a, b) => a.totalCost - b.totalCost);
+
+  if (results.length === 0 && shopping.length > 0) {
+    console.warn(
+      `[Pretium] SerpApi returned ${shopping.length} items but none had both price and URL.`
+    );
+  }
 
   await setCachedResults(queryHash, results);
   if (results.length > 0) {
