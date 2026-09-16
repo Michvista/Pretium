@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const recentSearches = useAppStore((s) => s.recentSearches);
   const checkAndIncrementSearch = useAppStore((s) => s.checkAndIncrementSearch);
   const isPremium = useAppStore((s) => s.isPremium);
+  const setPremium = useAppStore((s) => s.setPremium);
   const searchCount = useAppStore((s) => s.searchCount);
 
   const [mode, setMode] = useState<InputMode>('search');
@@ -99,6 +100,17 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
             )}
+            <View className="mt-2 flex-row items-center justify-between">
+              <Text className="text-[11px] text-faint">Demo tools</Text>
+              <Pressable
+                onPress={() => setPremium(!isPremium)}
+                hitSlop={8}
+                className="rounded-full border border-faint/40 px-3 py-1">
+                <Text className="text-[12px] font-bold text-white">
+                  {isPremium ? 'Exit premium demo' : 'Demo premium'}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </SafeAreaView>
       </View>
