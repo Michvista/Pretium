@@ -15,6 +15,10 @@ interface AppState {
   addRecentSearch: (product: Product) => void;
   clearRecentSearches: () => void;
 
+  /** Google Shopping countries to search (gl codes). Default from env. */
+  selectedCountries: string[];
+  setSelectedCountries: (codes: string[]) => void;
+
   /** RevenueCat "premium" entitlement. */
   isPremium: boolean;
   setPremium: (value: boolean) => void;
@@ -31,6 +35,12 @@ interface AppState {
   checkAndIncrementSearch: () => boolean;
 }
 
+const DEFAULT_COUNTRIES = (process.env.EXPO_PUBLIC_SERPAPI_COUNTRIES ?? 'us')
+  .split(',')
+  .map((c) => c.trim().toLowerCase())
+  .filter(Boolean)
+  .slice(0, 3);
+
 export const useAppStore = create<AppState>()((set, get) => ({
   recentSearches: [],
   addRecentSearch: (product) =>
@@ -41,6 +51,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
       ].slice(0, 10),
     })),
   clearRecentSearches: () => set({ recentSearches: [] }),
+
+  selectedCountries: DEFAULT_COUNTRIES,
+  setSelectedCountries: (codes) => set({ selectedCountries: codes.slice(0, 3) }),
 
   isPremium: false,
   setPremium: (value) => set({ isPremium: value }),

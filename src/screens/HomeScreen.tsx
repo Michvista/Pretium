@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CountryPicker } from '@/components/CountryPicker';
 import { ImagePickerInput, type PickedImage } from '@/components/ImagePickerInput';
 import { SearchBar } from '@/components/SearchBar';
 import { extractProductFromImage } from '@/services/gemini';
@@ -116,6 +117,11 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerClassName="p-6 gap-3" keyboardShouldPersistTaps="handled">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-sm font-bold text-ink">Search markets</Text>
+          <CountryPicker />
+        </View>
+
         <View className="flex-row gap-2 rounded-2xl border border-border bg-surface p-0.5">
           {(['search', 'photo', 'link'] as const).map((m) => (
             <Pressable

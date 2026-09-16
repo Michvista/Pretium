@@ -1,19 +1,24 @@
 import { buildSearchQuery } from '@/services/gemini';
 import { getCachedResults, md5, savePriceHistory, setCachedResults } from '@/services/supabase';
+import { useAppStore } from '@/store/useAppStore';
 import type { PriceResult, Product } from '@/types';
 
 const API_KEY = process.env.EXPO_PUBLIC_SERPAPI_KEY;
 
 /**
- * Countries to search (Google `gl` codes), comma-separated.
+ * Countries to search (Google `gl` codes). Driven by the in-app country
+ * picker; falls back to the EXPO_PUBLIC_SERPAPI_COUNTRIES env var.
  * Each country is a separate SerpApi call — keep the list short on the free tier.
- * e.g. EXPO_PUBLIC_SERPAPI_COUNTRIES=us,gb,ng,ca
  */
-const COUNTRIES = (process.env.EXPO_PUBLIC_SERPAPI_COUNTRIES ?? 'us')
-  .split(',')
-  .map((c) => c.trim().toLowerCase())
-  .filter(Boolean)
-  .slice(0, 6);
+function getCountries(): string[] {
+  const fromStore = useAppStore.getState().selectedCountries;
+  if (fromStore.length > 0) return fromStore.slice(0, 6);
+  return (process.env.EXPO_PUBLIC_SERPAPI_COUNTRIES ?? 'us')
+    .split(',')
+    .map((c) => c.trim().toLowerCase())
+    .filter(Boolean)
+    .slice(0, 6);
+}
 
 interface SerpApiShoppingResult {
   title?: string;
@@ -145,7 +150,8 @@ export async function fetchPrices(product: Product): Promise<PriceResult[]> {
   }
 
   const shopping: SerpApiShoppingResult[] = [];
-  for (const country of COUNTRIES) {
+  const countries = getCountries();
+  for (const country of countries) {
     const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&gl=${country}&hl=en&api_key=${API_KEY}`;
     const data = await callSerpApi(url);
     if (!data) continue;

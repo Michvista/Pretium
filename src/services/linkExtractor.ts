@@ -54,12 +54,13 @@ function extractOgTags(html: string): OgTags {
   };
 }
 
-/** Cleans a retailer title into a tight search query (drops "Buy...", "at Store", suffixes). */
+/** Cleans a retailer title into a tight search query (drops "Buy...", "at Store", attribute phrases). */
 function cleanQueryName(title: string): string {
   return title
     .replace(/^buy\s+/i, '')
     .replace(/\s*at\s+[\w.\-]+\s*.*$/i, '')
-    .replace(/\s*[|–—-]\s*.*$/i, '')
+    .replace(/[|–—-]/g, ',')
+    .split(/[,()]/)[0]
     .replace(/[®™©]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
