@@ -143,7 +143,14 @@ export async function matchListings(
     return { ...listing, matchConfidence: confidence };
   });
 
-  return matched
+  const filtered = matched
     .filter((m) => m.matchConfidence >= 0.7)
     .sort((a, b) => b.matchConfidence - a.matchConfidence);
+
+  // Never return empty when raw results existed: if nothing cleared the
+  // 0.7 bar, surface the best matches so the user still sees options.
+  if (filtered.length === 0) {
+    return matched.sort((a, b) => b.matchConfidence - a.matchConfidence).slice(0, 5);
+  }
+  return filtered;
 }
