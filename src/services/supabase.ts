@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-import type { PriceResult, WatchlistItem } from '@/types';
+import type { PriceHistoryPoint, PriceResult, WatchlistItem } from '@/types';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -64,6 +64,26 @@ export async function savePriceHistory(
     currency: r.currency,
   }));
   await supabase.from('price_history').insert(rows);
+}
+
+export async function getPriceHistory(
+  productHash: string,
+  days = 30
+): Promise<PriceHistoryPoint[]> {
+  const supabase = getClient();
+  if (!supabase) return [];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from('price_history')
+    .select('recorded_at, price')
+    .eq('product_hash', productHash)
+    .gte('recorded_at', since)
+    .order('recorded_at', { ascending: true });
+  if (error || !data) return [];
+  return data.map((row) => ({
+    date: String(row.recorded_at).slice(0, 10),
+    price: Number(row.price),
+  }));
 }
 
 export async function getWatchlist(userId: string): Promise<WatchlistItem[]> {

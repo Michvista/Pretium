@@ -17,6 +17,14 @@ export function ResultCard({ result, index }: ResultCardProps) {
         ? 'Free shipping'
         : `Shipping +${formatShipping(result.shippingCost)}`;
 
+  const confidence = (result as PriceResult & { matchConfidence?: number }).matchConfidence;
+  const matchBadge =
+    confidence == null
+      ? null
+      : confidence >= 0.9
+        ? { label: 'Verified match', cls: 'bg-green text-white' }
+        : { label: 'Possible match', cls: 'bg-amber text-white' };
+
   const openLink = async () => {
     if (!result.productUrl) return;
     try {
@@ -41,12 +49,19 @@ export function ResultCard({ result, index }: ResultCardProps) {
           <Text className="shrink text-sm font-bold text-ink" numberOfLines={1}>
             {result.storeName}
           </Text>
-          {result.rating != null && (
-            <Text className="text-sm font-bold text-amber">
-              ★ {result.rating.toFixed(1)}
-              {result.ratingCount != null ? ` (${result.ratingCount})` : ''}
-            </Text>
-          )}
+          <View className="flex-row items-center gap-2">
+            {result.rating != null && (
+              <Text className="text-sm font-bold text-amber">
+                ★ {result.rating.toFixed(1)}
+                {result.ratingCount != null ? ` (${result.ratingCount})` : ''}
+              </Text>
+            )}
+            {matchBadge && (
+              <Text className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${matchBadge.cls}`}>
+                {matchBadge.label}
+              </Text>
+            )}
+          </View>
         </View>
         {result.title ? (
           <Text className="text-sm text-muted" numberOfLines={2}>

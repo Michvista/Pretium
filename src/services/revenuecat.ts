@@ -25,6 +25,16 @@ export async function initRevenueCat(): Promise<void> {
       console.warn('[Pretium] RevenueCat API key missing — subscriptions disabled.');
       return;
     }
+    // RevenueCat force-closes the app when a test_ key is used in a real
+    // build ("the app will close now to protect test purchases"). Skip
+    // configuring entirely until a production (goog_/appl_) key is present.
+    if (apiKey.startsWith('test_')) {
+      console.warn(
+        '[Pretium] RevenueCat test key detected — skipping configure. ' +
+          'Test keys close the app in builds; add the goog_ Play Store key for release.'
+      );
+      return;
+    }
     await Purchases.configure({ apiKey });
     revenueCatReady = true;
     Purchases.addCustomerInfoUpdateListener((info: CustomerInfo) => {

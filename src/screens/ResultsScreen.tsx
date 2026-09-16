@@ -1,11 +1,12 @@
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ResultCard } from '@/components/ResultCard';
+import { matchListings, type MatchedResult } from '@/services/matching';
 import { fetchPrices } from '@/services/serpapi';
 import type { PriceResult, Product } from '@/types';
 
@@ -24,7 +25,7 @@ export default function ResultsScreen() {
   const { product: productParam } = useLocalSearchParams<{ product?: string }>();
   const product = useMemo(() => parseProduct(productParam), [productParam]);
 
-  const [results, setResults] = useState<PriceResult[]>([]);
+  const [results, setResults] = useState<MatchedResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>('total');
 
@@ -35,11 +36,13 @@ export default function ResultsScreen() {
       return;
     }
     setLoading(true);
-    fetchPrices(product).then((prices) => {
-      if (cancelled) return;
-      setResults(prices);
-      setLoading(false);
-    });
+    fetchPrices(product)
+      .then((prices: PriceResult[]) => matchListings(product, prices))
+      .then((matched) => {
+        if (cancelled) return;
+        setResults(matched);
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -65,7 +68,7 @@ export default function ResultsScreen() {
         </Text>
       ) : null}
 
-      <View className="mt-1 flex-row gap-2">
+      <View className="mt-1 flex-row flex-wrap gap-2">
         {(
           [
             { key: 'total', label: 'Total Price' },
@@ -83,6 +86,13 @@ export default function ResultsScreen() {
             </Text>
           </Pressable>
         ))}
+        {product && (
+          <Pressable
+            onPress={() => router.push({ pathname: '/product', params: { product: JSON.stringify(product) } })}
+            className="rounded-full bg-dark px-3 py-2 active:opacity-70">
+            <Text className="text-sm font-bold text-white">Price trend →</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
