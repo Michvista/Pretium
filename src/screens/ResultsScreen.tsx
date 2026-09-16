@@ -58,7 +58,11 @@ export default function ResultsScreen() {
   const header = (
     <View className="mb-3 gap-2">
       {product?.imageUrl ? (
-        <Image source={{ uri: product.imageUrl }} className="h-[180px] w-full rounded-3xl" contentFit="cover" />
+        <Image
+          source={{ uri: product.imageUrl }}
+          style={{ width: '100%', height: 180, borderRadius: 24 }}
+          contentFit="cover"
+        />
       ) : null}
       <Text className="text-lg font-bold text-ink">{product?.name ?? 'Unknown product'}</Text>
       {product?.brand ? (

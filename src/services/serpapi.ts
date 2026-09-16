@@ -4,6 +4,17 @@ import type { PriceResult, Product } from '@/types';
 
 const API_KEY = process.env.EXPO_PUBLIC_SERPAPI_KEY;
 
+/**
+ * Countries to search (Google `gl` codes), comma-separated.
+ * Each country is a separate SerpApi call — keep the list short on the free tier.
+ * e.g. EXPO_PUBLIC_SERPAPI_COUNTRIES=us,gb,ng,ca
+ */
+const COUNTRIES = (process.env.EXPO_PUBLIC_SERPAPI_COUNTRIES ?? 'us')
+  .split(',')
+  .map((c) => c.trim().toLowerCase())
+  .filter(Boolean)
+  .slice(0, 6);
+
 interface SerpApiShoppingResult {
   title?: string;
   link?: string;
@@ -117,9 +128,9 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Fetches price results for a product via the SerpApi Google Shopping engine.
+ * Fetches price results for a product via the SerpApi Google Shopping engine,
+ * across every configured country (EXPO_PUBLIC_SERPAPI_COUNTRIES).
  * Results are cached (Supabase, 1h TTL) and sorted cheapest-first.
- * Falls back to organic results when the shopping engine returns nothing.
  */
 export async function fetchPrices(product: Product): Promise<PriceResult[]> {
   const query = buildQuery(product);
@@ -133,31 +144,39 @@ export async function fetchPrices(product: Product): Promise<PriceResult[]> {
     return [];
   }
 
-  // gl=us&hl=en force US Google Shopping regardless of the requester's IP —
-  // otherwise SerpApi geo-locates by IP and some regions return no results.
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&gl=us&hl=en&api_key=${API_KEY}`;
-  const data = await callSerpApi(url);
-  if (!data) {
-    console.warn('[Pretium] SerpApi unreachable after retries.');
-    return [];
-  }
-  if (data.error) {
-    console.warn('[Pretium] SerpApi error:', data.error);
-    return [];
+  const shopping: SerpApiShoppingResult[] = [];
+  for (const country of COUNTRIES) {
+    const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&gl=${country}&hl=en&api_key=${API_KEY}`;
+    const data = await callSerpApi(url);
+    if (!data) continue;
+    if (data.error) {
+      console.warn(`[Pretium] SerpApi (${country}) error:`, data.error);
+      continue;
+    }
+    if ((data.shopping_results ?? []).length > 0) {
+      shopping.push(...(data.shopping_results ?? []));
+    } else if ((data.organic_results ?? []).length > 0) {
+      console.warn(`[Pretium] (${country}) no shopping results — using organic.`);
+      shopping.push(
+        ...(data.organic_results ?? []).map((o) => ({
+          title: o.title,
+          link: o.link,
+          source: o.source ?? 'Web',
+        }))
+      );
+    }
   }
 
-  let shopping = data.shopping_results ?? [];
-  if (shopping.length === 0 && (data.organic_results ?? []).length > 0) {
-    console.warn('[Pretium] No shopping results — falling back to organic results.');
-    shopping = (data.organic_results ?? []).map((o) => ({
-      title: o.title,
-      link: o.link,
-      source: o.source ?? 'Web',
-      thumbnail: undefined,
-    }));
-  }
+  // Dedupe across countries by URL (falling back to title + store)
+  const seen = new Set<string>();
+  const deduped = shopping.filter((item) => {
+    const key = item.product_link ?? item.link ?? `${item.title}::${item.source}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
-  const results = shopping
+  const results = deduped
     .map(mapResult)
     .filter((r) => r.price > 0 && r.productUrl.length > 0)
     .sort((a, b) => a.totalCost - b.totalCost);

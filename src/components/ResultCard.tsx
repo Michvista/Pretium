@@ -38,7 +38,11 @@ export function ResultCard({ result, index }: ResultCardProps) {
     <View className="flex-row gap-3 rounded-3xl border border-border bg-surface p-3">
       <View className="h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl bg-surface-muted">
         {result.imageUrl ? (
-          <Image source={{ uri: result.imageUrl }} className="h-[72px] w-[72px]" contentFit="cover" />
+          <Image
+            source={{ uri: result.imageUrl }}
+            style={{ width: 72, height: 72 }}
+            contentFit="cover"
+          />
         ) : (
           <Text className="text-lg font-bold text-faint">#{index + 1}</Text>
         )}
