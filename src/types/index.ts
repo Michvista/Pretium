@@ -4,6 +4,41 @@
 
 export type ProductSource = 'text' | 'image' | 'link';
 
+export type ProductCondition = 'new' | 'refurbished' | 'used';
+
+export interface ProductIdentifiers {
+  gtin?: string | null;
+  upc?: string | null;
+  mpn?: string | null;
+  sku?: string | null;
+  asin?: string | null;
+}
+
+export type ProductSpecifications = Record<string, string | number>;
+
+/**
+ * Canonical product model representing the single source of truth for an
+ * identified physical product across text, image, or link lineage.
+ */
+export interface CanonicalProduct {
+  id: string;
+  name: string;
+  brand: string | null;
+  model: string | null;
+  category: string | null;
+  specifications: ProductSpecifications;
+  identifiers: ProductIdentifiers;
+  condition?: ProductCondition;
+  source: ProductSource;
+  sourceUrl?: string | null;
+  searchQuery: string;
+}
+
+/**
+ * Product capture interface used across the extraction pipeline and UI.
+ * Compatible with CanonicalProduct while preserving legacy/optional fields
+ * for current application consumers.
+ */
 export interface Product {
   /** Canonical display name of the product. */
   name: string;
@@ -23,23 +58,47 @@ export interface Product {
   sourceUrl?: string | null;
   /** Canonical search query used when fetching prices. */
   searchQuery: string;
+
+  /** Optional reference id when associated with a CanonicalProduct. */
+  id?: string;
+  /** Structured specifications dictionary. */
+  specifications?: ProductSpecifications;
+  /** Standard product identifiers (GTIN, UPC, MPN, SKU, ASIN). */
+  identifiers?: ProductIdentifiers;
+  /** Condition of the product if specified. */
+  condition?: ProductCondition;
 }
 
-export interface PriceResult {
+/**
+ * Represents an individual retailer offer/listing for a product.
+ */
+export interface RetailerListing {
   storeName: string;
+  productUrl: string;
+  inStock: boolean;
+  /** Raw listing title from retailer / search engine. */
+  rawTitle?: string;
+  /** Title alias preserved for backwards compatibility with existing UI / components. */
+  title?: string;
+  /** Image URL of the retailer listing. */
+  listingImageUrl?: string | null;
+  /** Image URL alias preserved for backwards compatibility with existing UI / components. */
+  imageUrl?: string | null;
   price: number;
   currency: string;
   shippingCost: number | null;
   totalCost: number;
-  productUrl: string;
-  inStock: boolean;
-  title?: string;
-  imageUrl?: string | null;
   rating?: number | null;
   ratingCount?: number | null;
-  /** Set by Mark's matching model (Phase 6): 0-1 confidence this is the same product. */
+  /** Reserved for future matching engine (Phase 6): 0-1 confidence score. Not calculated in Phase 1. */
   matchConfidence?: number | null;
 }
+
+/**
+ * Active listing representation in the app, aliased to RetailerListing
+ * to preserve full compatibility with existing consumers.
+ */
+export type PriceResult = RetailerListing;
 
 export interface PriceHistoryPoint {
   /** ISO date string for the record (YYYY-MM-DD). */

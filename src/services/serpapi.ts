@@ -59,6 +59,8 @@ function mapResult(raw: SerpApiShoppingResult): PriceResult {
   const shippingCost = parseDeliveryCost(raw.delivery);
   const totalCost = Math.round((price + (shippingCost ?? 0)) * 100) / 100;
 
+  const imageUrl = raw.thumbnail ?? null;
+
   return {
     storeName: raw.source ?? 'Unknown store',
     price,
@@ -67,8 +69,10 @@ function mapResult(raw: SerpApiShoppingResult): PriceResult {
     totalCost,
     productUrl: raw.link ?? '',
     inStock: true,
+    rawTitle: raw.title,
     title: raw.title,
-    imageUrl: raw.thumbnail ?? null,
+    listingImageUrl: imageUrl,
+    imageUrl,
     rating: raw.rating != null ? Number(raw.rating) : null,
     ratingCount: raw.reviews != null ? Number(raw.reviews) : null,
   };
