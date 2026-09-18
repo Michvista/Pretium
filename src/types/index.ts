@@ -92,6 +92,8 @@ export interface RetailerListing {
   ratingCount?: number | null;
   /** Reserved for future matching engine (Phase 6): 0-1 confidence score. Not calculated in Phase 1. */
   matchConfidence?: number | null;
+  /** Acquisition source provenance indicating where this candidate originated. */
+  retrievalSource?: 'serpapi' | 'scraper' | 'direct_url';
 }
 
 /**

@@ -1,8 +1,19 @@
-import { buildSearchQuery } from '@/services/gemini';
+import { orchestrateRetrieval } from '@/services/acquisitionOrchestrator';
+import { synthesizeQueries } from '@/services/querySynthesis';
+import { scrapePrices } from '@/services/scraper';
 import { getCachedResults, md5, savePriceHistory, setCachedResults } from '@/services/supabase';
 import type { PriceResult, Product } from '@/types';
 
 const API_KEY = process.env.EXPO_PUBLIC_SERPAPI_KEY;
+
+export interface FetchPricesOptions {
+  /** 2-letter country code for search localization (e.g. 'us', 'gb', 'ng'). Defaults to 'us'. */
+  gl?: string;
+  /** Language code for search localization (e.g. 'en', 'fr'). Defaults to 'en'. */
+  hl?: string;
+  /** Whether to bypass cache. Defaults to false. */
+  bypassCache?: boolean;
+}
 
 interface SerpApiShoppingResult {
   title?: string;
@@ -23,9 +34,9 @@ interface SerpApiResponse {
   shopping_results?: SerpApiShoppingResult[];
 }
 
-function buildQuery(product: Product): string {
-  if (product.searchQuery?.trim()) return product.searchQuery.trim();
-  return buildSearchQuery(product);
+export function buildQuery(product: Product): string {
+  const { strictQuery } = synthesizeQueries(product);
+  return strictQuery;
 }
 
 function parsePriceString(value?: string): number | null {
@@ -78,24 +89,22 @@ function mapResult(raw: SerpApiShoppingResult): PriceResult {
   };
 }
 
-/**
- * Fetches price results for a product via the SerpApi Google Shopping engine.
- * Results are cached (Supabase, 1h TTL) and sorted cheapest-first.
- */
-export async function fetchPrices(product: Product): Promise<PriceResult[]> {
-  const query = buildQuery(product);
-  const queryHash = await md5(query);
-
-  const cached = await getCachedResults(queryHash);
-  if (cached && cached.length > 0) return cached;
-
-  if (!API_KEY) {
-    console.warn('[Pretium] EXPO_PUBLIC_SERPAPI_KEY not set — no price results.');
-    return [];
-  }
-
+export async function querySerpApiShopping(
+  query: string,
+  gl: string,
+  hl: string
+): Promise<PriceResult[]> {
   try {
-    const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+    const apiKey = process.env.EXPO_PUBLIC_SERPAPI_KEY || API_KEY;
+    const params = new URLSearchParams({
+      engine: 'google_shopping',
+      q: query,
+      gl,
+      hl,
+      direct_link: 'true',
+      api_key: apiKey as string,
+    });
+    const url = `https://serpapi.com/search.json?${params.toString()}`;
     const response = await fetch(url);
     if (!response.ok) {
       console.warn(`[Pretium] SerpApi HTTP ${response.status}`);
@@ -107,21 +116,30 @@ export async function fetchPrices(product: Product): Promise<PriceResult[]> {
       return [];
     }
 
-    const results = (data.shopping_results ?? [])
+    return (data.shopping_results ?? [])
       .map(mapResult)
       .filter((r) => r.price > 0 && r.productUrl.length > 0)
       .sort((a, b) => a.totalCost - b.totalCost);
-
-    await setCachedResults(queryHash, results);
-    if (results.length > 0) {
-      const productHash = await md5(
-        [product.name, product.brand ?? '', product.model ?? ''].join('|')
-      );
-      await savePriceHistory(productHash, results);
-    }
-    return results;
   } catch (error) {
     console.warn('[Pretium] SerpApi fetch failed:', error);
     return [];
   }
+}
+
+/**
+ * Fetches price results for a product via the SerpApi Google Shopping engine.
+ * Results are cached (Supabase, 1h TTL) and sorted cheapest-first.
+ * Implements strict retrieval first with automatic fallback to broad query if zero results are returned.
+ */
+export async function fetchPrices(
+  product: Product,
+  options: FetchPricesOptions = {}
+): Promise<PriceResult[]> {
+  const apiKey = process.env.EXPO_PUBLIC_SERPAPI_KEY;
+  if (!apiKey) {
+    console.warn('[Pretium] EXPO_PUBLIC_SERPAPI_KEY not set — no price results.');
+    return [];
+  }
+
+  return orchestrateRetrieval(product, options);
 }

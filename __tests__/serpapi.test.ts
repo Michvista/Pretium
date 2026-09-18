@@ -88,4 +88,94 @@ describe('fetchPrices', () => {
     const results = await fetchPrices(product as never);
     expect(results).toEqual([]);
   });
+
+  it('passes localization options and direct_link to SerpApi URL', async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ shopping_results: [] }),
+      })
+    ) as jest.Mock;
+
+    await fetchPrices(product as never, { gl: 'gb', hl: 'en' });
+    expect(global.fetch).toHaveBeenCalled();
+    const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(calledUrl).toContain('gl=gb');
+    expect(calledUrl).toContain('hl=en');
+    expect(calledUrl).toContain('direct_link=true');
+  });
+
+  it('attempts broadQuery fallback when strict query returns zero results', async () => {
+    const multiAttributeProduct = {
+      name: 'Sony WH-1000XM5',
+      brand: 'Sony',
+      model: 'WH-1000XM5',
+      color: 'Black',
+      source: 'image',
+      searchQuery: 'Sony WH-1000XM5 Black',
+    };
+
+    let callCount = 0;
+    global.fetch = jest.fn((url: string) => {
+      callCount++;
+      if (callCount === 1) {
+        // Strict query returns 0 results
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ shopping_results: [] }),
+        });
+      }
+      // Broad query returns 1 result
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            shopping_results: [
+              {
+                title: 'Sony WH-1000XM5 Headphones',
+                source: 'Sony Store',
+                price: '$399.00',
+                link: 'https://sony.com/item',
+              },
+            ],
+          }),
+      });
+    }) as jest.Mock;
+
+    const results = await fetchPrices(multiAttributeProduct as never);
+    expect(callCount).toBe(2);
+    expect(results).toHaveLength(1);
+    expect(results[0].storeName).toBe('Sony Store');
+  });
+
+  it('falls back to retailer scraper when both strict and broad SerpApi queries return zero results', async () => {
+    global.fetch = jest.fn((url: string) => {
+      if (url.includes('serpapi.com')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ shopping_results: [] }),
+        });
+      }
+      if (url.includes('jumia.com.ng')) {
+        const html = `
+          <article class="prd">
+            <a href="/jumia-item-123.html">
+              <div class="name">Sony WH-1000XM5 from Jumia</div>
+              <div class="prc">₦ 550,000</div>
+            </a>
+          </article>
+        `;
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(html),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404 });
+    }) as jest.Mock;
+
+    const results = await fetchPrices(product as never);
+    expect(results).toHaveLength(1);
+    expect(results[0].storeName).toBe('Jumia');
+    expect(results[0].price).toBe(550000);
+  });
 });
