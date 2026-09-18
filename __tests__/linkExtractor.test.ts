@@ -2,6 +2,7 @@ import {
   extractAsinFromUrl,
   extractProductFromHtml,
   extractProductFromLink,
+  extractSpecsFromText,
   parseJsonLdProduct,
   parseMicrodataProduct,
 } from '../src/services/linkExtractor';
@@ -29,11 +30,12 @@ const JSON_LD_HTML = `<!doctype html>
       "@type": "Product",
       "name": "Sony WH-1000XM5 Headphones",
       "image": "https://m.media-amazon.com/images/I/71xyz.jpg",
-      "description": "Premium wireless noise canceling headphones",
+      "description": "Premium wireless noise canceling headphones with 30-hour battery life",
       "brand": {
         "@type": "Brand",
         "name": "Sony"
       },
+      "model": "WH-1000XM5",
       "sku": "WH1000XM5-BLK",
       "mpn": "WH1000XM5",
       "gtin13": "0027242923508",
@@ -50,6 +52,75 @@ const JSON_LD_HTML = `<!doctype html>
 <body></body>
 </html>`;
 
+const JSON_LD_GRAPH_HTML = `<!doctype html>
+<html>
+<head>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "Tech Store",
+          "url": "https://techstore.com"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Laptops" }
+          ]
+        },
+        {
+          "@type": "Product",
+          "name": "Dell XPS 15 9530 Laptop",
+          "brand": { "@type": "Brand", "name": "Dell" },
+          "model": "XPS 15 9530",
+          "description": "15.6 inch display, Intel Core i7 processor, 32GB RAM, 1TB SSD storage",
+          "additionalProperty": [
+            { "@type": "PropertyValue", "name": "Storage", "value": "1TB SSD" },
+            { "@type": "PropertyValue", "name": "RAM", "value": "32GB" },
+            { "@type": "PropertyValue", "name": "Screen Size", "value": "15.6 inch" }
+          ],
+          "offers": {
+            "@type": "AggregateOffer",
+            "lowPrice": "1899.99",
+            "highPrice": "2199.99",
+            "priceCurrency": "USD",
+            "seller": { "@type": "Organization", "name": "Dell Direct" }
+          }
+        }
+      ]
+    }
+  </script>
+</head>
+</html>`;
+
+const JSON_LD_ARRAY_HTML = `<!doctype html>
+<html>
+<head>
+  <script type="application/ld+json">
+    [
+      {
+        "@type": "Product",
+        "name": "Samsung Galaxy S24 Ultra",
+        "brand": "Samsung",
+        "model": "SM-S928B",
+        "sku": "SAM-S24U-512",
+        "mpn": "SM-S928B/DS",
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": "1299.99",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          }
+        ]
+      }
+    ]
+  </script>
+</head>
+</html>`;
+
 const MICRODATA_HTML = `<!doctype html>
 <html>
 <body>
@@ -57,7 +128,7 @@ const MICRODATA_HTML = `<!doctype html>
     <h1 itemprop="name">Apple MacBook Pro 16"</h1>
     <span itemprop="brand">Apple</span>
     <img itemprop="image" src="https://example.com/macbook.png" alt="MacBook" />
-    <p itemprop="description">M3 Max chip, 36GB Unified Memory</p>
+    <p itemprop="description">M3 Max chip, 36GB Unified Memory, 1TB storage</p>
     <span itemprop="sku">MUW63LL/A</span>
     <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
       <span itemprop="price" content="3499.00">$3,499.00</span>
@@ -71,6 +142,25 @@ const MICRODATA_HTML = `<!doctype html>
 describe('linkExtractor service', () => {
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  describe('extractSpecsFromText', () => {
+    it('extracts explicit specs from text without normalization', () => {
+      const text =
+        'Features 30-hour battery life, 256GB storage, 6.1-inch display, and Apple M3 Pro chip with 16GB RAM.';
+      const specs = extractSpecsFromText(text);
+
+      expect(specs.batteryLife).toBe('30-hour');
+      expect(specs.storage).toBe('256GB');
+      expect(specs.screenSize).toBe('6.1-inch');
+      expect(specs.processor).toBe('Apple M3 Pro');
+      expect(specs.ram).toBe('16GB');
+    });
+
+    it('returns empty object when text contains no recognizable attributes', () => {
+      expect(extractSpecsFromText('Awesome product that you will really enjoy!')).toEqual({});
+      expect(extractSpecsFromText('')).toEqual({});
+    });
   });
 
   describe('OpenGraph extraction (backwards compatibility)', () => {
@@ -133,11 +223,12 @@ describe('linkExtractor service', () => {
   });
 
   describe('JSON-LD extraction', () => {
-    it('extracts rich product metadata and identifiers from JSON-LD', () => {
+    it('extracts rich product metadata and identifiers from standard JSON-LD', () => {
       const data = parseJsonLdProduct(JSON_LD_HTML);
       expect(data).not.toBeNull();
       expect(data?.name).toBe('Sony WH-1000XM5 Headphones');
       expect(data?.brand).toBe('Sony');
+      expect(data?.model).toBe('WH-1000XM5');
       expect(data?.price).toBe(398);
       expect(data?.currency).toBe('USD');
       expect(data?.sku).toBe('WH1000XM5-BLK');
@@ -147,9 +238,42 @@ describe('linkExtractor service', () => {
       expect(data?.imageUrl).toBe('https://m.media-amazon.com/images/I/71xyz.jpg');
     });
 
+    it('extracts Product from complex @graph with multiple mixed non-product nodes', () => {
+      const data = parseJsonLdProduct(JSON_LD_GRAPH_HTML);
+      expect(data).not.toBeNull();
+      expect(data?.name).toBe('Dell XPS 15 9530 Laptop');
+      expect(data?.brand).toBe('Dell');
+      expect(data?.model).toBe('XPS 15 9530');
+      expect(data?.price).toBe(1899.99); // lowPrice from AggregateOffer
+      expect(data?.seller).toBe('Dell Direct');
+      expect(data?.specifications?.Storage).toBe('1TB SSD');
+      expect(data?.specifications?.RAM).toBe('32GB');
+      expect(data?.specifications?.['Screen Size']).toBe('15.6 inch');
+    });
+
+    it('extracts Product from top-level JSON-LD array', () => {
+      const data = parseJsonLdProduct(JSON_LD_ARRAY_HTML);
+      expect(data).not.toBeNull();
+      expect(data?.name).toBe('Samsung Galaxy S24 Ultra');
+      expect(data?.brand).toBe('Samsung');
+      expect(data?.model).toBe('SM-S928B');
+      expect(data?.price).toBe(1299.99);
+      expect(data?.mpn).toBe('SM-S928B/DS');
+    });
+
     it('handles malformed JSON-LD scripts without throwing', () => {
       const malformedHtml = '<script type="application/ld+json">{ invalid json</script>';
       expect(parseJsonLdProduct(malformedHtml)).toBeNull();
+    });
+
+    it('recovers when first script tag is malformed but second is valid', () => {
+      const mixedHtml = `
+        <script type="application/ld+json">{ broken json </script>
+        ${JSON_LD_HTML}
+      `;
+      const data = parseJsonLdProduct(mixedHtml);
+      expect(data).not.toBeNull();
+      expect(data?.name).toBe('Sony WH-1000XM5 Headphones');
     });
   });
 
@@ -183,41 +307,79 @@ describe('linkExtractor service', () => {
     });
   });
 
-  describe('Layer merging and priority resolution', () => {
-    it('prioritizes JSON-LD over OpenGraph while backfilling siteName from OG', () => {
-      const combinedHtml = `
+  describe('Fallback hierarchy and priority resolution', () => {
+    it('prioritizes JSON-LD over Microdata and OpenGraph', () => {
+      const fullHtml = `
         <html>
           <head>
-            <meta property="og:title" content="Low Quality OG Title">
-            <meta property="og:site_name" content="Best Buy">
+            <title>Title Tag Heading</title>
+            <meta property="og:title" content="OpenGraph Title">
+            <meta property="og:price:amount" content="100.00">
             <script type="application/ld+json">
               {
                 "@context": "https://schema.org",
                 "@type": "Product",
-                "name": "High Quality JSON-LD Product Title",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "299.99",
-                  "priceCurrency": "USD"
-                }
+                "name": "JSON-LD Winner Title",
+                "offers": { "@type": "Offer", "price": "199.99", "priceCurrency": "USD" }
               }
             </script>
           </head>
+          <body>
+            <div itemscope itemtype="https://schema.org/Product">
+              <span itemprop="name">Microdata Runner-Up</span>
+              <span itemprop="price">150.00</span>
+            </div>
+          </body>
         </html>
       `;
 
-      const result = extractProductFromHtml(combinedHtml, 'https://bestbuy.com/item/123');
-      expect(result.name).toBe('High Quality JSON-LD Product Title');
-      expect(result.price).toBe(299.99);
-      expect(result.brand).toBe('Best Buy'); // backfilled from og:site_name
-      expect(result.retailer).toBe('Best Buy');
+      const result = extractProductFromHtml(fullHtml, 'https://example.com/prod');
+      expect(result.name).toBe('JSON-LD Winner Title');
+      expect(result.price).toBe(199.99);
     });
 
-    it('attaches Amazon ASIN identifier when extracting from an Amazon link', () => {
+    it('falls back to Microdata when JSON-LD is missing', () => {
+      const result = extractProductFromHtml(MICRODATA_HTML, 'https://example.com/mac');
+      expect(result.name).toBe('Apple MacBook Pro 16"');
+      expect(result.brand).toBe('Apple');
+      expect(result.price).toBe(3499);
+      // Explicit specs parsed from description
+      expect(result.specifications?.processor).toBe('M3 Max');
+      expect(result.specifications?.ram).toBe('36GB');
+      expect(result.specifications?.storage).toBe('1TB');
+    });
+
+    it('falls back to OpenGraph when JSON-LD and Microdata are missing', () => {
+      const result = extractProductFromHtml(OG_HTML, 'https://example.com/shoe');
+      expect(result.name).toBe('Nike Air Force 1 & White');
+      expect(result.price).toBe(129.99);
+    });
+
+    it('falls back to <title> tag when no structured metadata is available', () => {
+      const titleOnlyHtml = `
+        <html>
+          <head>
+            <title>Sony PlayStation 5 Console - Slim Edition</title>
+          </head>
+          <body>
+            <p>Some plain text description</p>
+          </body>
+        </html>
+      `;
+
+      const result = extractProductFromHtml(titleOnlyHtml, 'https://example.com/ps5');
+      expect(result.name).toBe('Sony PlayStation 5 Console - Slim Edition');
+      expect(result.price).toBeNull();
+      expect(result.brand).toBeNull();
+    });
+
+    it('extracts explicit description attributes into specifications', () => {
       const result = extractProductFromHtml(
         JSON_LD_HTML,
         'https://www.amazon.com/Sony-WH-1000XM5/dp/B09XS7JWHH'
       );
+      expect(result.name).toBe('Sony WH-1000XM5 Headphones');
+      expect(result.specifications?.batteryLife).toBe('30-hour');
       expect(result.identifiers?.asin).toBe('B09XS7JWHH');
       expect(result.identifiers?.sku).toBe('WH1000XM5-BLK');
       expect(result.identifiers?.mpn).toBe('WH1000XM5');

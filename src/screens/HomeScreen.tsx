@@ -15,6 +15,7 @@ import { ImagePickerInput, type PickedImage } from '@/components/ImagePickerInpu
 import { SearchBar } from '@/components/SearchBar';
 import { extractProductFromImage } from '@/services/gemini';
 import { extractProductFromLink } from '@/services/linkExtractor';
+import { parseQueryToProduct } from '@/services/queryParser';
 import { useAppStore } from '@/store/useAppStore';
 import type { Product } from '@/types';
 
@@ -45,11 +46,7 @@ export default function HomeScreen() {
   };
 
   const handleTextSubmit = (query: string) => {
-    finishProduct({
-      name: query,
-      source: 'text',
-      searchQuery: query,
-    });
+    finishProduct(parseQueryToProduct(query));
   };
 
   const handleImage = async (image: PickedImage) => {
